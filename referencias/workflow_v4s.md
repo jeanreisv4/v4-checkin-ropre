@@ -20,28 +20,37 @@ fechado.
 | Promessa | Um check-in ROPRE pronto para a reunião — deck e documento — com cada número rastreável à sua fonte e o que não foi medido escrito na cara. |
 | Escopo | pessoal no primeiro ciclo; solicitar canonização depois de rodar em dois clientes |
 | Cadências | quinzenal, mensal, quarter |
-| Etapas | 15 |
-| Conexões | 23 |
+| Etapas | 19 |
+| Conexões | 27 |
 
 ## O desenho
 
 ```mermaid
 flowchart TD
-    E01["<b>01</b> Abrir o período e as<br/>premissas"]
-    E02["<b>02</b> Conferir a cobertura<br/>das fontes 🔧"]
-    E03["<b>03</b> Puxar a base do<br/>período 🔧"]
-    E04["<b>04</b> Calcular os<br/>indicadores do período"]
-    E05["<b>05</b> Resumo de call →<br/>briefing"]
-    E06["<b>06</b> Varredura do grupo de<br/>WhatsApp 🔧"]
-    E07["<b>07</b> Entregas e horas 🔧"]
-    E08["<b>08</b> Sinais do cockpit 🔧"]
-    E09["<b>09</b> R · Resultados"]
-    E10["<b>10</b> O · Objetivos 🔧"]
-    E11["<b>11</b> P · Premissas e Riscos"]
-    E12["<b>12</b> E · Entregas"]
-    E13["<b>13</b> E · Próximos Passos"]
-    E14["<b>14</b> Conferência dos<br/>números"]
-    E15["<b>15</b> Entregar para o deck<br/>do design system 🔧"]
+    subgraph CHECKIN["Check-in ROPRE · este workflow"]
+        E01["<b>01</b> Abrir o período e as<br/>premissas"]
+        E02["<b>02</b> Conferir a cobertura<br/>das fontes 🔧"]
+        E03["<b>03</b> Puxar a base do<br/>período 🔧"]
+        E04["<b>04</b> Calcular os<br/>indicadores do período"]
+        E05["<b>05</b> Resumo de call →<br/>briefing"]
+        E06["<b>06</b> Varredura do grupo de<br/>WhatsApp 🔧"]
+        E07["<b>07</b> Entregas e horas 🔧"]
+        E08["<b>08</b> Sinais do cockpit 🔧"]
+        E09["<b>09</b> R · Resultados"]
+        E10["<b>10</b> O · Objetivos 🔧"]
+        E11["<b>11</b> P · Premissas e Riscos"]
+        E12["<b>12</b> E · Entregas"]
+        E13["<b>13</b> E · Próximos Passos"]
+        E14["<b>14</b> Conferência dos<br/>números"]
+        E15["<b>15</b> Entregar para o deck<br/>do design system 🔧"]
+    end
+
+    subgraph DECK["Deck · design system da companhia"]
+        E16["<b>16</b> Preparar o conteúdo<br/>para o deck<br/><i>checkin-colli</i>"]
+        E17["<b>17</b> Compilar as páginas no<br/>design system 🔧<br/><i>account-checkin-ropre-v2</i>"]
+        E18["<b>18</b> QA visual 🔧<br/><i>account-checkin-ropre-v2</i>"]
+        E19["<b>19</b> Publicar e entregar 🔧<br/><i>account-checkin-ropre-v2</i>"]
+    end
 
     E01 --> E02
     E01 --> E05
@@ -66,6 +75,10 @@ flowchart TD
     E12 --> E14
     E13 --> E14
     E14 --> E15
+    E15 --> E16
+    E16 --> E17
+    E17 --> E18
+    E18 --> E19
 
     class E01,E05 briefing;
     class E02,E03,E07 dados;
@@ -73,6 +86,7 @@ flowchart TD
     class E04,E09,E10,E11,E12,E13 analise;
     class E14 revisao;
     class E15 entrega;
+    class E16,E17,E18,E19 outra;
 
     classDef briefing fill:#1f2937,stroke:#60a5fa,color:#e5e7eb;
     classDef dados fill:#1f2937,stroke:#34d399,color:#e5e7eb;
@@ -80,6 +94,7 @@ flowchart TD
     classDef analise fill:#1f2937,stroke:#f87171,color:#e5e7eb;
     classDef revisao fill:#1f2937,stroke:#a78bfa,color:#e5e7eb;
     classDef entrega fill:#1f2937,stroke:#e5e7eb,color:#e5e7eb;
+    classDef outra fill:#111827,stroke:#9ca3af,color:#9ca3af,stroke-dasharray:4 3;
 ```
 
 🔧 = etapa que chama ferramenta (MCP) durante a execução.
@@ -353,6 +368,61 @@ modelo, a regra precisa viajar junto com a tarefa — o agente não pode depende
 > Fora da plataforma, quando não há design system disponível, o renderizador local gera um .pptx na
 > mesma ordem de blocos. É fallback, não é o caminho principal.
 
+## 16 · Preparar o conteúdo para o deck
+
+**Categoria:** Entrega · **outra skill** · executada por `checkin-colli`
+**Entradas:** check-in aprovado (15)
+**Saídas:** conteúdo do deck organizado em narrativa de slides
+
+> Executada por `checkin-colli`. Transforma os cinco blocos do ROPRE na narrativa que o deck vai
+> contar: uma ideia por slide, na ordem capa → índice → 01 Resultados → 02 Objetivos → 03 Premissas e
+> Riscos → 04 Entregas → 05 Próximos Passos → fontes.
+>
+> O que o check-in exige desta etapa, e que vale como contrato: **nenhum número pode ser recalculado,
+> arredondado ou reescrito aqui**. Indicador que chegou como "não medido" continua "não medido" —
+> não vira travessão, não vira zero e não é omitido por não caber no slide.
+
+## 17 · Compilar as páginas no design system
+
+**Categoria:** Entrega · **outra skill** · *chama ferramenta* · executada por `account-checkin-ropre-v2`
+**Entradas:** conteúdo do deck (16)
+**Saídas:** deck HTML 1600×900 com os tokens da marca aplicados
+
+> Executada por `account-checkin-ropre-v2`. Compila as páginas: escolhe o layout de cada slide pelo
+> tipo de conteúdo (KPI, tabela, gráfico, lista, divisória), aplica os tokens visuais e monta o deck
+> em HTML 1600×900.
+>
+> Dois conteúdos são **requisito de layout**, não preferência editorial, e precisam de lugar previsto:
+> a **regra de atribuição escrita por extenso** no bloco de Resultados, e a **página final de fontes e
+> do que não foi medido**. São elas que permitem defender o número linha por linha na reunião; slide
+> que as corta devolve o check-in para esta etapa.
+
+## 18 · QA visual
+
+**Categoria:** Revisão · **outra skill** · *chama ferramenta* · executada por `account-checkin-ropre-v2`
+**Entradas:** deck compilado (17), check-in aprovado (15)
+**Saídas:** deck aprovado ou lista de correções de layout
+
+> Executada por `account-checkin-ropre-v2`. Confere o deck contra o conteúdo que entrou: texto
+> cortado, tabela estourando a página, contraste, consistência de tokens e slide vazio.
+>
+> Acrescente duas conferências de conteúdo, que são as que interessam ao check-in: **todo número do
+> deck existe no check-in aprovado** e **nenhum "não medido" virou número na diagramação**.
+> Divergência aqui não é ajuste de layout — é erro, e volta para a etapa 16.
+
+## 19 · Publicar e entregar
+
+**Categoria:** Entrega · **outra skill** · *chama ferramenta* · executada por `account-checkin-ropre-v2`
+**Entradas:** deck aprovado (18), documento de revisão (15)
+**Saídas:** deck publicado para a reunião, documento de registro
+
+> Executada por `account-checkin-ropre-v2`. Publica o deck para a reunião e guarda o documento de
+> revisão como registro do período.
+>
+> O documento não é rascunho do deck: é onde o check-in fica auditável depois, com as tabelas
+> completas e a lista de fontes. Deck e documento saem do mesmo pacote e não podem mostrar números
+> diferentes.
+
 ---
 
 ## Onde este workflow encosta em outras skills
@@ -374,7 +444,7 @@ automático em vez de manual.
 ## Conexões
 
 ```
-  01→02  01→05  01→06  01→07  01→08  02→03  03→04  04→09  04→10  04→11  05→10  05→11  05→12  05→13  06→12  07→12  08→11  09→14  10→14  11→14  12→14  13→14  14→15
+  01→02  01→05  01→06  01→07  01→08  02→03  03→04  04→09  04→10  04→11  05→10  05→11  05→12  05→13  06→12  07→12  08→11  09→14  10→14  11→14  12→14  13→14  14→15  15→16  16→17  17→18  18→19
 ```
 
 ## Como validar antes de publicar

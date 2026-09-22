@@ -36,7 +36,8 @@
           "premissas do projeto",
           "regra de atribuição"
         ],
-        "briefing": "Resolva o período: quinzena fecha em 15 ou no último dia do mês; mês fecha no último dia; quarter\nfecha no trimestre. Período que ainda não terminou sai marcado **parcial**, com a data de corte.\n\nTraga do cadastro do projeto: fee, verba de mídia contratada (bruta e líquida, com o imposto),\nmargem de contribuição, funis de venda, funil de recorrência e a **regra de atribuição** com a data\nem que foi fechada.\n\nPremissa sem data de confirmação sai sinalizada. Margem e regra de atribuição são as duas que mais\nmudam veredito — se estiverem \"a confirmar\", isso precisa aparecer no bloco de Premissas."
+        "briefing": "Resolva o período: quinzena fecha em 15 ou no último dia do mês; mês fecha no último dia; quarter\nfecha no trimestre. Período que ainda não terminou sai marcado **parcial**, com a data de corte.\n\nTraga do cadastro do projeto: fee, verba de mídia contratada (bruta e líquida, com o imposto),\nmargem de contribuição, funis de venda, funil de recorrência e a **regra de atribuição** com a data\nem que foi fechada.\n\nPremissa sem data de confirmação sai sinalizada. Margem e regra de atribuição são as duas que mais\nmudam veredito — se estiverem \"a confirmar\", isso precisa aparecer no bloco de Premissas.",
+        "executado_por": "este workflow"
       },
       {
         "id": "02",
@@ -52,7 +53,8 @@
           "mapa de cobertura por fonte e por canal: último dia com dado",
           "completa sim/não"
         ],
-        "briefing": "**Esta etapa roda antes de qualquer número.** Para cada fonte que o check-in vai usar — CRM, cada\ncanal de mídia, analytics, chat — descubra o último dia com dado dentro do período e responda se\nela cobre o período inteiro. Tolere um dia de atraso: plataforma de anúncio consolida em D-1.\n\nQuando um canal tiver custo mas não tiver contagem de lead, registre isso separadamente: custo e\nlead têm coberturas diferentes, e um lead parcial estraga CPL e taxa de entrada no CRM sem estragar\no ROAS.\n\nDevolva a lista de fontes incompletas com nome e último dia. **Ela é insumo obrigatório da etapa de\ncálculo** e vai impressa na última página do deck.\n\nExemplo do que isso evita, de um caso real: com a base de um canal parada, setembro rendeu ROAS de\n37 e taxa de entrada no CRM de 720%. Os dois números eram aritmeticamente corretos e completamente\nfalsos."
+        "briefing": "**Esta etapa roda antes de qualquer número.** Para cada fonte que o check-in vai usar — CRM, cada\ncanal de mídia, analytics, chat — descubra o último dia com dado dentro do período e responda se\nela cobre o período inteiro. Tolere um dia de atraso: plataforma de anúncio consolida em D-1.\n\nQuando um canal tiver custo mas não tiver contagem de lead, registre isso separadamente: custo e\nlead têm coberturas diferentes, e um lead parcial estraga CPL e taxa de entrada no CRM sem estragar\no ROAS.\n\nDevolva a lista de fontes incompletas com nome e último dia. **Ela é insumo obrigatório da etapa de\ncálculo** e vai impressa na última página do deck.\n\nExemplo do que isso evita, de um caso real: com a base de um canal parada, setembro rendeu ROAS de\n37 e taxa de entrada no CRM de 720%. Os dois números eram aritmeticamente corretos e completamente\nfalsos.",
+        "executado_por": "este workflow"
       },
       {
         "id": "03",
@@ -70,7 +72,8 @@
           "contatos",
           "mídia por dia e canal"
         ],
-        "briefing": "Puxe do Nekt, para o período **e para os doze meses anteriores** (a série mensal e a safra precisam\ndo histórico):\n\n- **negócios**: id, data de criação, data de fechamento, status, valor, funil, etapa, motivo de\n  perda, contato, e as marcas de atribuição (tag e origem);\n- **contatos**: id, data de criação, origem, canal;\n- **mídia**: um registro por dia e canal, com investimento, impressões, cliques e leads.\n\nNão agregue nada aqui e não descarte linha. Só puxe do canal que o projeto declara como fonte\ndaquele canal — quando o mesmo canal existe em duas fontes, contar as duas dobra o investimento."
+        "briefing": "Puxe do Nekt, para o período **e para os doze meses anteriores** (a série mensal e a safra precisam\ndo histórico):\n\n- **negócios**: id, data de criação, data de fechamento, status, valor, funil, etapa, motivo de\n  perda, contato, e as marcas de atribuição (tag e origem);\n- **contatos**: id, data de criação, origem, canal;\n- **mídia**: um registro por dia e canal, com investimento, impressões, cliques e leads.\n\nNão agregue nada aqui e não descarte linha. Só puxe do canal que o projeto declara como fonte\ndaquele canal — quando o mesmo canal existe em duas fontes, contar as duas dobra o investimento.",
+        "executado_por": "este workflow"
       },
       {
         "id": "04",
@@ -88,7 +91,8 @@
           "pacote de números do período",
           "com o período anterior ao lado"
         ],
-        "briefing": "Calcule, aplicando a regra de atribuição do projeto a cada negócio e a cada contato. O que depender\nde fonte incompleta sai `null`, nunca zero.\n\n**Vendas e receita** — negócios com status ganho, em funil de venda, **data de fechamento dentro do\nperíodo** e valor maior que zero. Separe em **novos** (demais funis) e **recorrentes** (funil de\nrecorrência), com contagem, receita e ticket de cada um, e a soma dos dois.\n\n**Mídia** — investimento, impressões, cliques e leads somados do período. `CTR = cliques ÷\nimpressões`. `CPL = investimento ÷ leads`. `ROAS = receita ÷ investimento`. `CAC = investimento ÷\nvendas novas`. Todos `null` se a cobertura de 02 reprovou a fonte.\n\n**Entrada no CRM** — `contatos criados no período ÷ leads das plataformas`. Se a contagem de lead\nestiver parcial, sai `null`: uma razão com numerador cheio e denominador pela metade vira 720%.\n\n**Economia do período** — `break-even mensal = (fee + verba bruta) ÷ margem`. A meta do período é o\nbreak-even multiplicado por `dias do período ÷ dias do mês`. `atingimento = receita ÷ meta`.\n`resultado = receita × margem − fee proporcional − mídia bruta gasta`. Se o gasto não foi medido,\nuse a verba contratada proporcional **e marque que usou estimativa**.\n\n**Safra por mês de criação** — negócios criados no mês, quantos já resolvidos (ganho ou perdido),\nquantos ganhos, receita, `taxa de ganho = ganhos ÷ resolvidos` e `eficiência = receita da safra ÷\ngasto do mês`. Safra pouco resolvida não se compara com safra madura; registre a maturidade.\n\n**Série mensal** — doze meses por data de fechamento, com novos e recorrentes separados.\n\n**Cobertura de atribuição** — quantas vendas do período por tipo de marca (tag e origem, só tag, só\norigem, sem marca nenhuma). É esta tabela que sustenta o número quando o cliente diverge.\n\n**Ponte com o lançamento do cliente** — quando o cliente mantém planilha própria, compare mês a mês\no que ele lança com o que o CRM mostra, separando venda nova de recompra. A divergência quase sempre\né recompra: a planilha lança só a venda nova e a recompra fica numa linha à parte.\n\nRepita tudo para o **período anterior de mesmo tamanho** e devolva a variação de cada indicador."
+        "briefing": "Calcule, aplicando a regra de atribuição do projeto a cada negócio e a cada contato. O que depender\nde fonte incompleta sai `null`, nunca zero.\n\n**Vendas e receita** — negócios com status ganho, em funil de venda, **data de fechamento dentro do\nperíodo** e valor maior que zero. Separe em **novos** (demais funis) e **recorrentes** (funil de\nrecorrência), com contagem, receita e ticket de cada um, e a soma dos dois.\n\n**Mídia** — investimento, impressões, cliques e leads somados do período. `CTR = cliques ÷\nimpressões`. `CPL = investimento ÷ leads`. `ROAS = receita ÷ investimento`. `CAC = investimento ÷\nvendas novas`. Todos `null` se a cobertura de 02 reprovou a fonte.\n\n**Entrada no CRM** — `contatos criados no período ÷ leads das plataformas`. Se a contagem de lead\nestiver parcial, sai `null`: uma razão com numerador cheio e denominador pela metade vira 720%.\n\n**Economia do período** — `break-even mensal = (fee + verba bruta) ÷ margem`. A meta do período é o\nbreak-even multiplicado por `dias do período ÷ dias do mês`. `atingimento = receita ÷ meta`.\n`resultado = receita × margem − fee proporcional − mídia bruta gasta`. Se o gasto não foi medido,\nuse a verba contratada proporcional **e marque que usou estimativa**.\n\n**Safra por mês de criação** — negócios criados no mês, quantos já resolvidos (ganho ou perdido),\nquantos ganhos, receita, `taxa de ganho = ganhos ÷ resolvidos` e `eficiência = receita da safra ÷\ngasto do mês`. Safra pouco resolvida não se compara com safra madura; registre a maturidade.\n\n**Série mensal** — doze meses por data de fechamento, com novos e recorrentes separados.\n\n**Cobertura de atribuição** — quantas vendas do período por tipo de marca (tag e origem, só tag, só\norigem, sem marca nenhuma). É esta tabela que sustenta o número quando o cliente diverge.\n\n**Ponte com o lançamento do cliente** — quando o cliente mantém planilha própria, compare mês a mês\no que ele lança com o que o CRM mostra, separando venda nova de recompra. A divergência quase sempre\né recompra: a planilha lança só a venda nova e a recompra fica numa linha à parte.\n\nRepita tudo para o **período anterior de mesmo tamanho** e devolva a variação de cada indicador.",
+        "executado_por": "este workflow"
       },
       {
         "id": "05",
@@ -105,7 +109,8 @@
           "pendências e riscos",
           "com data"
         ],
-        "briefing": "Além do que o template do catálogo já faz, separe a saída em três listas: **acordos** (o que ficou\ncombinado e quem assumiu), **pendências** (o que ficou aberto e de quem é a bola) e **riscos**\n(ameaça ao resultado levantada na conversa).\n\nSó entra o que foi dito. Não infira compromisso a partir de tom, de silêncio ou de \"a gente vê\nisso\". Sem call no período, devolva as três listas vazias e diga que não houve."
+        "briefing": "Além do que o template do catálogo já faz, separe a saída em três listas: **acordos** (o que ficou\ncombinado e quem assumiu), **pendências** (o que ficou aberto e de quem é a bola) e **riscos**\n(ameaça ao resultado levantada na conversa).\n\nSó entra o que foi dito. Não infira compromisso a partir de tom, de silêncio ou de \"a gente vê\nisso\". Sem call no período, devolva as três listas vazias e diga que não houve.",
+        "executado_por": "este workflow"
       },
       {
         "id": "06",
@@ -121,7 +126,8 @@
         "saidas": [
           "pendências abertas com data e o que trava"
         ],
-        "briefing": "Traga só o que virou pendência: aprovação que não veio, material que o cliente ficou de mandar,\nacesso que falta, reclamação sem resposta. Conversa resolvida no próprio dia não entra.\n\nCada linha precisa de data e de uma frase acionável — ela vai direto para o bloco de Entregas.\nSe os campos de resumo do grupo vierem vazios, diga isso: é problema de operação e vira risco."
+        "briefing": "Traga só o que virou pendência: aprovação que não veio, material que o cliente ficou de mandar,\nacesso que falta, reclamação sem resposta. Conversa resolvida no próprio dia não entra.\n\nCada linha precisa de data e de uma frase acionável — ela vai direto para o bloco de Entregas.\nSe os campos de resumo do grupo vierem vazios, diga isso: é problema de operação e vira risco.",
+        "executado_por": "este workflow"
       },
       {
         "id": "07",
@@ -138,7 +144,8 @@
           "entregas realizadas",
           "previstas e horas dedicadas"
         ],
-        "briefing": "Traga o que a equipe entregou no período, o que está previsto e as horas dedicadas.\n\n**Entrega sem evidência não entra**: cada item aponta para algo que o cliente possa conferir — a\npeça no ar, o documento, a campanha publicada. Tarefa interna de alinhamento não é entrega de\ncliente. Previsto sem dono ou sem data sai marcado `a confirmar`."
+        "briefing": "Traga o que a equipe entregou no período, o que está previsto e as horas dedicadas.\n\n**Entrega sem evidência não entra**: cada item aponta para algo que o cliente possa conferir — a\npeça no ar, o documento, a campanha publicada. Tarefa interna de alinhamento não é entrega de\ncliente. Previsto sem dono ou sem data sai marcado `a confirmar`.",
+        "executado_por": "este workflow"
       },
       {
         "id": "08",
@@ -155,7 +162,8 @@
           "churn ou renovação no horizonte",
           "NPS recente"
         ],
-        "briefing": "Health score não é resultado do trabalho: é termômetro de relação, e entra como **contexto de\nrisco**. Health caindo num período de resultado subindo é exatamente o que a reunião precisa saber."
+        "briefing": "Health score não é resultado do trabalho: é termômetro de relação, e entra como **contexto de\nrisco**. Health caindo num período de resultado subindo é exatamente o que a reunião precisa saber.",
+        "executado_por": "este workflow"
       },
       {
         "id": "09",
@@ -171,7 +179,8 @@
         "saidas": [
           "bloco R escrito"
         ],
-        "briefing": "Abra com a frase que responde o período: quantas vendas, quanta receita, quanto da meta, e como\nficou contra o período anterior. Depois, obrigatoriamente:\n\n- **novo contra recorrente**, separados e somados;\n- **a ponte com o lançamento do cliente**, que explica a divergência antes de ele perguntar;\n- **como as vendas estão marcadas**, com a regra de atribuição escrita por extenso e datada;\n- **eficiência por safra**, que isola o efeito da mídia do mês.\n\nIndicador `null` vira \"não medido\" com o motivo ao lado. Não escreva \"estável\" nem \"sem variação\nrelevante\" no lugar de ausência de medição. Não invente número que não esteja no pacote."
+        "briefing": "Abra com a frase que responde o período: quantas vendas, quanta receita, quanto da meta, e como\nficou contra o período anterior. Depois, obrigatoriamente:\n\n- **novo contra recorrente**, separados e somados;\n- **a ponte com o lançamento do cliente**, que explica a divergência antes de ele perguntar;\n- **como as vendas estão marcadas**, com a regra de atribuição escrita por extenso e datada;\n- **eficiência por safra**, que isola o efeito da mídia do mês.\n\nIndicador `null` vira \"não medido\" com o motivo ao lado. Não escreva \"estável\" nem \"sem variação\nrelevante\" no lugar de ausência de medição. Não invente número que não esteja no pacote.",
+        "executado_por": "este workflow"
       },
       {
         "id": "10",
@@ -188,7 +197,8 @@
         "saidas": [
           "bloco O"
         ],
-        "briefing": "Puxe as metas do período. Sem meta cadastrada, use as do cadastro do projeto **e diga que a meta não\nestá no sistema** — cadastrar vira próximo passo.\n\nCada key result sai com meta, realizado e status: ✅ atingido, ⏳ dentro da tolerância, ❌ fora,\n— sem dado. KR cujo indicador ficou sem medição sai como — e **não** como ❌: não atingir e não\nmedir são coisas diferentes.\n\nFeche com o que foi acordado com o cliente nas calls do período."
+        "briefing": "Puxe as metas do período. Sem meta cadastrada, use as do cadastro do projeto **e diga que a meta não\nestá no sistema** — cadastrar vira próximo passo.\n\nCada key result sai com meta, realizado e status: ✅ atingido, ⏳ dentro da tolerância, ❌ fora,\n— sem dado. KR cujo indicador ficou sem medição sai como — e **não** como ❌: não atingir e não\nmedir são coisas diferentes.\n\nFeche com o que foi acordado com o cliente nas calls do período.",
+        "executado_por": "este workflow"
       },
       {
         "id": "11",
@@ -207,7 +217,8 @@
         "saidas": [
           "bloco P"
         ],
-        "briefing": "**Premissas:** o que o check-in assume como verdade — margem, verba, regra de atribuição, escopo —\ncada uma com a origem (\"confirmada com o cliente em DD/MM\", \"contrato\", \"a confirmar\"). Premissa sem\norigem é risco disfarçado.\n\n**Riscos** no formato causa → risco → efeito, com probabilidade e impacto de 1 a 5 e o produto.\nQuatro fontes: os riscos cadastrados, os levantados na call, os sinais do cockpit e **os que o\npróprio dado denuncia** — base parada, entrada no CRM abaixo de 80%, receita majoritariamente sem\ncanal identificado, evento de conversão sem disparar. Risco vindo do dado não precisa de P × I\ninventado: deixe em branco e mostre o número que o gerou."
+        "briefing": "**Premissas:** o que o check-in assume como verdade — margem, verba, regra de atribuição, escopo —\ncada uma com a origem (\"confirmada com o cliente em DD/MM\", \"contrato\", \"a confirmar\"). Premissa sem\norigem é risco disfarçado.\n\n**Riscos** no formato causa → risco → efeito, com probabilidade e impacto de 1 a 5 e o produto.\nQuatro fontes: os riscos cadastrados, os levantados na call, os sinais do cockpit e **os que o\npróprio dado denuncia** — base parada, entrada no CRM abaixo de 80%, receita majoritariamente sem\ncanal identificado, evento de conversão sem disparar. Risco vindo do dado não precisa de P × I\ninventado: deixe em branco e mostre o número que o gerou.",
+        "executado_por": "este workflow"
       },
       {
         "id": "12",
@@ -224,7 +235,8 @@
         "saidas": [
           "bloco de Entregas"
         ],
-        "briefing": "Três listas e um número: realizadas com evidência, previstas com prazo e dono (`a confirmar` quando\nfaltar), pendências abertas juntando WhatsApp e call, e as horas dedicadas. Sem as horas na fonte,\ndiga que não tem — não estime somando tarefa."
+        "briefing": "Três listas e um número: realizadas com evidência, previstas com prazo e dono (`a confirmar` quando\nfaltar), pendências abertas juntando WhatsApp e call, e as horas dedicadas. Sem as horas na fonte,\ndiga que não tem — não estime somando tarefa.",
+        "executado_por": "este workflow"
       },
       {
         "id": "13",
@@ -241,7 +253,8 @@
         "saidas": [
           "bloco de Próximos Passos"
         ],
-        "briefing": "O que vem, com dono e prazo, de duas origens: o acordado com o cliente e o planejado pela equipe.\n\nTodo passo responde ao que o check-in mostrou. Se o bloco R apontou queda de aquisição e o bloco P\npôs o atendimento como maior P × I, o primeiro passo é sobre isso — não sobre o que estava no\nbacklog antes da reunião. Passo sem dono sai `a confirmar`, visível no deck."
+        "briefing": "O que vem, com dono e prazo, de duas origens: o acordado com o cliente e o planejado pela equipe.\n\nTodo passo responde ao que o check-in mostrou. Se o bloco R apontou queda de aquisição e o bloco P\npôs o atendimento como maior P × I, o primeiro passo é sobre isso — não sobre o que estava no\nbacklog antes da reunião. Passo sem dono sai `a confirmar`, visível no deck.",
+        "executado_por": "este workflow"
       },
       {
         "id": "14",
@@ -260,7 +273,8 @@
           "aprovado",
           "ou lista de correções que impede seguir"
         ],
-        "briefing": "Esta etapa existe porque o cálculo foi feito por agente. Confira seis coisas e **bloqueie** se\nqualquer uma falhar:\n\n1. **recontagem independente**: some de novo, direto da base da etapa 03, a receita e a contagem de\n   vendas do período. Tem de bater com o pacote até o centavo;\n2. **fechamento das partes**: novos + recorrentes = total, em contagem e em receita;\n3. **nenhum número novo** nos blocos que não exista no pacote;\n4. **nada marcado \"não medido\" virou número** em algum bloco;\n5. **período parcial marcado** em toda comparação, com meta proporcional;\n6. **regra de atribuição escrita** no bloco R, com a data em que foi fechada.\n\nDivergência entre a recontagem e o pacote é erro de cálculo, não arredondamento: devolva os dois\nnúmeros e pare. Check-in atrasado custa menos que check-in com número que não fecha."
+        "briefing": "Esta etapa existe porque o cálculo foi feito por agente. Confira seis coisas e **bloqueie** se\nqualquer uma falhar:\n\n1. **recontagem independente**: some de novo, direto da base da etapa 03, a receita e a contagem de\n   vendas do período. Tem de bater com o pacote até o centavo;\n2. **fechamento das partes**: novos + recorrentes = total, em contagem e em receita;\n3. **nenhum número novo** nos blocos que não exista no pacote;\n4. **nada marcado \"não medido\" virou número** em algum bloco;\n5. **período parcial marcado** em toda comparação, com meta proporcional;\n6. **regra de atribuição escrita** no bloco R, com a data em que foi fechada.\n\nDivergência entre a recontagem e o pacote é erro de cálculo, não arredondamento: devolva os dois\nnúmeros e pare. Check-in atrasado custa menos que check-in com número que não fecha.",
+        "executado_por": "este workflow"
       },
       {
         "id": "15",
@@ -276,7 +290,75 @@
           "check-in em formato de consumo para a skill de deck",
           "documento de revisão"
         ],
-        "briefing": "**Este workflow não desenha slide.** O deck é responsabilidade da skill de design system da\ncompanhia (`account-checkin-ropre-v2`), que já tem os tokens visuais, os layouts de 1600×900, o\nstorytelling de performance e o QA visual. O que sai daqui é o conteúdo aprovado, pronto para ela\nconsumir.\n\nEntregue dois artefatos do mesmo pacote:\n\n1. **o check-in aprovado**, com os cinco blocos, os números e a lista do que não foi medido, no\n   formato que a skill de deck espera;\n2. **o documento de revisão**, para conferência antes da reunião e registro depois.\n\nDois conteúdos são obrigatórios e não podem ser podados pela diagramação: a **regra de atribuição**\nescrita por extenso no bloco de Resultados, e a página final de **fontes e o que não foi medido**.\nSe o layout não tiver lugar para elas, o lugar tem de ser criado — são elas que permitem defender o\nnúmero linha por linha na reunião.\n\nFora da plataforma, quando não há design system disponível, o renderizador local gera um .pptx na\nmesma ordem de blocos. É fallback, não é o caminho principal."
+        "briefing": "**Este workflow não desenha slide.** O deck é responsabilidade da skill de design system da\ncompanhia (`account-checkin-ropre-v2`), que já tem os tokens visuais, os layouts de 1600×900, o\nstorytelling de performance e o QA visual. O que sai daqui é o conteúdo aprovado, pronto para ela\nconsumir.\n\nEntregue dois artefatos do mesmo pacote:\n\n1. **o check-in aprovado**, com os cinco blocos, os números e a lista do que não foi medido, no\n   formato que a skill de deck espera;\n2. **o documento de revisão**, para conferência antes da reunião e registro depois.\n\nDois conteúdos são obrigatórios e não podem ser podados pela diagramação: a **regra de atribuição**\nescrita por extenso no bloco de Resultados, e a página final de **fontes e o que não foi medido**.\nSe o layout não tiver lugar para elas, o lugar tem de ser criado — são elas que permitem defender o\nnúmero linha por linha na reunião.\n\nFora da plataforma, quando não há design system disponível, o renderizador local gera um .pptx na\nmesma ordem de blocos. É fallback, não é o caminho principal.",
+        "executado_por": "este workflow"
+      },
+      {
+        "id": "16",
+        "titulo": "Preparar o conteúdo para o deck",
+        "categoria": "Entrega",
+        "origem": "outra_skill",
+        "etapa_do_catalogo": null,
+        "chama_ferramenta": false,
+        "executado_por": "checkin-colli",
+        "entradas": [
+          "check-in aprovado (15)"
+        ],
+        "saidas": [
+          "conteúdo do deck organizado em narrativa de slides"
+        ],
+        "briefing": "Executada por `checkin-colli`. Transforma os cinco blocos do ROPRE na narrativa que o deck vai\ncontar: uma ideia por slide, na ordem capa → índice → 01 Resultados → 02 Objetivos → 03 Premissas e\nRiscos → 04 Entregas → 05 Próximos Passos → fontes.\n\nO que o check-in exige desta etapa, e que vale como contrato: **nenhum número pode ser recalculado,\narredondado ou reescrito aqui**. Indicador que chegou como \"não medido\" continua \"não medido\" —\nnão vira travessão, não vira zero e não é omitido por não caber no slide."
+      },
+      {
+        "id": "17",
+        "titulo": "Compilar as páginas no design system",
+        "categoria": "Entrega",
+        "origem": "outra_skill",
+        "etapa_do_catalogo": null,
+        "chama_ferramenta": true,
+        "executado_por": "account-checkin-ropre-v2",
+        "entradas": [
+          "conteúdo do deck (16)"
+        ],
+        "saidas": [
+          "deck HTML 1600×900 com os tokens da marca aplicados"
+        ],
+        "briefing": "Executada por `account-checkin-ropre-v2`. Compila as páginas: escolhe o layout de cada slide pelo\ntipo de conteúdo (KPI, tabela, gráfico, lista, divisória), aplica os tokens visuais e monta o deck\nem HTML 1600×900.\n\nDois conteúdos são **requisito de layout**, não preferência editorial, e precisam de lugar previsto:\na **regra de atribuição escrita por extenso** no bloco de Resultados, e a **página final de fontes e\ndo que não foi medido**. São elas que permitem defender o número linha por linha na reunião; slide\nque as corta devolve o check-in para esta etapa."
+      },
+      {
+        "id": "18",
+        "titulo": "QA visual",
+        "categoria": "Revisão",
+        "origem": "outra_skill",
+        "etapa_do_catalogo": null,
+        "chama_ferramenta": true,
+        "executado_por": "account-checkin-ropre-v2",
+        "entradas": [
+          "deck compilado (17)",
+          "check-in aprovado (15)"
+        ],
+        "saidas": [
+          "deck aprovado ou lista de correções de layout"
+        ],
+        "briefing": "Executada por `account-checkin-ropre-v2`. Confere o deck contra o conteúdo que entrou: texto\ncortado, tabela estourando a página, contraste, consistência de tokens e slide vazio.\n\nAcrescente duas conferências de conteúdo, que são as que interessam ao check-in: **todo número do\ndeck existe no check-in aprovado** e **nenhum \"não medido\" virou número na diagramação**.\nDivergência aqui não é ajuste de layout — é erro, e volta para a etapa 16."
+      },
+      {
+        "id": "19",
+        "titulo": "Publicar e entregar",
+        "categoria": "Entrega",
+        "origem": "outra_skill",
+        "etapa_do_catalogo": null,
+        "chama_ferramenta": true,
+        "executado_por": "account-checkin-ropre-v2",
+        "entradas": [
+          "deck aprovado (18)",
+          "documento de revisão (15)"
+        ],
+        "saidas": [
+          "deck publicado para a reunião",
+          "documento de registro"
+        ],
+        "briefing": "Executada por `account-checkin-ropre-v2`. Publica o deck para a reunião e guarda o documento de\nrevisão como registro do período.\n\nO documento não é rascunho do deck: é onde o check-in fica auditável depois, com as tabelas\ncompletas e a lista de fontes. Deck e documento saem do mesmo pacote e não podem mostrar números\ndiferentes."
       }
     ],
     "conexoes": [
@@ -371,6 +453,22 @@
       {
         "de": "14",
         "para": "15"
+      },
+      {
+        "de": "15",
+        "para": "16"
+      },
+      {
+        "de": "16",
+        "para": "17"
+      },
+      {
+        "de": "17",
+        "para": "18"
+      },
+      {
+        "de": "18",
+        "para": "19"
       }
     ],
     "integracoes_da_plataforma": [

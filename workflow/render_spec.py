@@ -37,18 +37,38 @@ def curto(titulo, largura=22):
 
 
 def mermaid(wf):
-    linhas = ["flowchart TD"]
-    for e in wf["etapas"]:
+    """Um subgrafo por dono: o que este workflow executa e o que roda em outra skill."""
+    def no(e):
         marca = " 🔧" if e["chama_ferramenta"] else ""
-        linhas.append(f'    E{e["id"]}["<b>{e["id"]}</b> {curto(e["titulo"])}{marca}"]')
+        rotulo = f'<b>{e["id"]}</b> {curto(e["titulo"])}{marca}'
+        if e.get("executado_por", "este workflow") != "este workflow":
+            rotulo += f'<br/><i>{e["executado_por"]}</i>'
+        return f'    E{e["id"]}["{rotulo}"]'
+
+    proprias = [e for e in wf["etapas"] if e.get("executado_por", "este workflow") == "este workflow"]
+    outras = [e for e in wf["etapas"] if e.get("executado_por", "este workflow") != "este workflow"]
+
+    linhas = ["flowchart TD"]
+    linhas.append('    subgraph CHECKIN["Check-in ROPRE · este workflow"]')
+    linhas += ["    " + no(e) for e in proprias]
+    linhas.append("    end")
+    if outras:
+        linhas.append("")
+        linhas.append('    subgraph DECK["Deck · design system da companhia"]')
+        linhas += ["    " + no(e) for e in outras]
+        linhas.append("    end")
     linhas.append("")
     for c in wf["conexoes"]:
         linhas.append(f'    E{c["de"]} --> E{c["para"]}')
     linhas.append("")
     for cat, classe in CORES.items():
-        ids = [f'E{e["id"]}' for e in wf["etapas"] if e["categoria"] == cat]
+        ids = [f'E{e["id"]}' for e in wf["etapas"]
+               if e["categoria"] == cat and e.get("executado_por", "este workflow") == "este workflow"]
         if ids:
             linhas.append(f'    class {",".join(ids)} {classe};')
+    fora = [f'E{e["id"]}' for e in wf["etapas"] if e.get("executado_por", "este workflow") != "este workflow"]
+    if fora:
+        linhas.append(f'    class {",".join(fora)} outra;')
     linhas += [
         "",
         "    classDef briefing fill:#1f2937,stroke:#60a5fa,color:#e5e7eb;",
@@ -57,15 +77,20 @@ def mermaid(wf):
         "    classDef analise fill:#1f2937,stroke:#f87171,color:#e5e7eb;",
         "    classDef revisao fill:#1f2937,stroke:#a78bfa,color:#e5e7eb;",
         "    classDef entrega fill:#1f2937,stroke:#e5e7eb,color:#e5e7eb;",
+        "    classDef outra fill:#111827,stroke:#9ca3af,color:#9ca3af,stroke-dasharray:4 3;",
     ]
     return "\n".join(linhas)
 
 
 def tabela_etapas(wf):
-    linhas = ["| # | Etapa | Categoria | Origem | Chama ferramenta |", "| --- | --- | --- | --- | --- |"]
+    linhas = ["| # | Etapa | Categoria | Executada por | Chama ferramenta |",
+              "| --- | --- | --- | --- | --- |"]
     for e in wf["etapas"]:
-        origem = f'catálogo · `{e["etapa_do_catalogo"]}`' if e["origem"] == "catalogo" else "do zero"
-        linhas.append(f'| {e["id"]} | {e["titulo"]} | {e["categoria"]} | {origem} | '
+        dono = e.get("executado_por", "este workflow")
+        dono = "este workflow" if dono == "este workflow" else f"`{dono}`"
+        if e["origem"] == "catalogo":
+            dono += f' · catálogo `{e["etapa_do_catalogo"]}`'
+        linhas.append(f'| {e["id"]} | {e["titulo"]} | {e["categoria"]} | {dono} | '
                       f'{"sim" if e["chama_ferramenta"] else "—"} |')
     return "\n".join(linhas)
 
@@ -119,12 +144,15 @@ def spec(dados):
     p += ["", "---", ""]
 
     for e in wf["etapas"]:
-        origem = (f'**do catálogo** (`{e["etapa_do_catalogo"]}`)' if e["origem"] == "catalogo" else "do zero")
+        origem = (f'**do catálogo** (`{e["etapa_do_catalogo"]}`)' if e["origem"] == "catalogo"
+                  else ("do zero" if e["origem"] != "outra_skill" else "**outra skill**"))
         ferramenta = " · *chama ferramenta*" if e["chama_ferramenta"] else ""
+        dono = e.get("executado_por", "este workflow")
+        marca_dono = "" if dono == "este workflow" else f' · executada por `{dono}`'
         p += [
             f'## {e["id"]} · {e["titulo"]}',
             "",
-            f'**Categoria:** {e["categoria"]} · {origem}{ferramenta}',
+            f'**Categoria:** {e["categoria"]} · {origem}{ferramenta}{marca_dono}',
             f'**Entradas:** {", ".join(e["entradas"])}',
             f'**Saídas:** {", ".join(e["saidas"])}',
             "",

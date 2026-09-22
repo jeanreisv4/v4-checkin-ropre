@@ -3,7 +3,7 @@
 Cada versão muda o que o cliente vê no check-in. Antes de publicar uma versão nova, rode
 `python3 tests/regressao.py`.
 
-## v1.3 · 22/09/2026 · A fronteira com o design system
+## v1.3 · 22/09/2026 · A fronteira com o design system, e o grafo até o deck publicado
 
 - **A etapa 15 deixa de desenhar slide.** Dentro da plataforma, o deck é renderizado pela skill de
   design system da companhia (`account-checkin-ropre-v2`), que já tem tokens, layouts de 1600×900,
@@ -14,6 +14,14 @@ Cada versão muda o que o cliente vê no check-in. Antes de publicar uma versão
   fechada para não haver etapa duplicada.
 - **Dois conteúdos viraram requisito de layout**, e não preferência: a regra de atribuição escrita por
   extenso no bloco de Resultados e a página final de fontes e do que não foi medido.
+- **O grafo passou a ir até o deck publicado**, com quatro etapas novas que rodam em outra skill:
+  16 preparar o conteúdo (`checkin-colli`), 17 compilar as páginas no design system, 18 QA visual e
+  19 publicar e entregar (as três últimas em `account-checkin-ropre-v2`). São 19 etapas e 27
+  conexões, e o diagrama separa em dois subgrafos quem executa o quê — o trecho do deck sai
+  pontilhado, com o nome da skill dentro do nó.
+- **O que o check-in cobra do trecho de deck virou briefing**, não recado: número não se recalcula na
+  diagramação, "não medido" não vira travessão nem some por falta de espaço, e o QA visual confere
+  também conteúdo — todo número do deck existe no check-in aprovado.
 - O renderizador `.pptx` continua como **fallback para fora da plataforma**.
 
 ## v1.2 · 22/09/2026 · O workflow vira arquivo, e o arquivo vira a documentação

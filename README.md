@@ -13,7 +13,7 @@ Este repositório resolve isso de duas formas, e as duas usam as mesmas definiç
 
 | | O que é | Para quê |
 | --- | --- | --- |
-| **O workflow** | 15 etapas encadeadas, cada uma com briefing, entradas e saídas | roda dentro da plataforma de workflows, onde os dados já chegam pelo pipeline |
+| **O workflow** | 19 etapas encadeadas — 15 do check-in e 4 do deck — cada uma com briefing, entradas e saídas | roda dentro da plataforma de workflows, onde os dados já chegam pelo pipeline |
 | **A implementação de referência** | ETL em Python, testado | confere se o workflow chegou ao número certo, e atende quem ainda não está na plataforma |
 
 ---
@@ -29,21 +29,30 @@ divergem.
 <!-- diagrama:inicio -->
 ```mermaid
 flowchart TD
-    E01["<b>01</b> Abrir o período e as<br/>premissas"]
-    E02["<b>02</b> Conferir a cobertura<br/>das fontes 🔧"]
-    E03["<b>03</b> Puxar a base do<br/>período 🔧"]
-    E04["<b>04</b> Calcular os<br/>indicadores do período"]
-    E05["<b>05</b> Resumo de call →<br/>briefing"]
-    E06["<b>06</b> Varredura do grupo de<br/>WhatsApp 🔧"]
-    E07["<b>07</b> Entregas e horas 🔧"]
-    E08["<b>08</b> Sinais do cockpit 🔧"]
-    E09["<b>09</b> R · Resultados"]
-    E10["<b>10</b> O · Objetivos 🔧"]
-    E11["<b>11</b> P · Premissas e Riscos"]
-    E12["<b>12</b> E · Entregas"]
-    E13["<b>13</b> E · Próximos Passos"]
-    E14["<b>14</b> Conferência dos<br/>números"]
-    E15["<b>15</b> Entregar para o deck<br/>do design system 🔧"]
+    subgraph CHECKIN["Check-in ROPRE · este workflow"]
+        E01["<b>01</b> Abrir o período e as<br/>premissas"]
+        E02["<b>02</b> Conferir a cobertura<br/>das fontes 🔧"]
+        E03["<b>03</b> Puxar a base do<br/>período 🔧"]
+        E04["<b>04</b> Calcular os<br/>indicadores do período"]
+        E05["<b>05</b> Resumo de call →<br/>briefing"]
+        E06["<b>06</b> Varredura do grupo de<br/>WhatsApp 🔧"]
+        E07["<b>07</b> Entregas e horas 🔧"]
+        E08["<b>08</b> Sinais do cockpit 🔧"]
+        E09["<b>09</b> R · Resultados"]
+        E10["<b>10</b> O · Objetivos 🔧"]
+        E11["<b>11</b> P · Premissas e Riscos"]
+        E12["<b>12</b> E · Entregas"]
+        E13["<b>13</b> E · Próximos Passos"]
+        E14["<b>14</b> Conferência dos<br/>números"]
+        E15["<b>15</b> Entregar para o deck<br/>do design system 🔧"]
+    end
+
+    subgraph DECK["Deck · design system da companhia"]
+        E16["<b>16</b> Preparar o conteúdo<br/>para o deck<br/><i>checkin-colli</i>"]
+        E17["<b>17</b> Compilar as páginas no<br/>design system 🔧<br/><i>account-checkin-ropre-v2</i>"]
+        E18["<b>18</b> QA visual 🔧<br/><i>account-checkin-ropre-v2</i>"]
+        E19["<b>19</b> Publicar e entregar 🔧<br/><i>account-checkin-ropre-v2</i>"]
+    end
 
     E01 --> E02
     E01 --> E05
@@ -68,6 +77,10 @@ flowchart TD
     E12 --> E14
     E13 --> E14
     E14 --> E15
+    E15 --> E16
+    E16 --> E17
+    E17 --> E18
+    E18 --> E19
 
     class E01,E05 briefing;
     class E02,E03,E07 dados;
@@ -75,6 +88,7 @@ flowchart TD
     class E04,E09,E10,E11,E12,E13 analise;
     class E14 revisao;
     class E15 entrega;
+    class E16,E17,E18,E19 outra;
 
     classDef briefing fill:#1f2937,stroke:#60a5fa,color:#e5e7eb;
     classDef dados fill:#1f2937,stroke:#34d399,color:#e5e7eb;
@@ -82,12 +96,13 @@ flowchart TD
     classDef analise fill:#1f2937,stroke:#f87171,color:#e5e7eb;
     classDef revisao fill:#1f2937,stroke:#a78bfa,color:#e5e7eb;
     classDef entrega fill:#1f2937,stroke:#e5e7eb,color:#e5e7eb;
+    classDef outra fill:#111827,stroke:#9ca3af,color:#9ca3af,stroke-dasharray:4 3;
 ```
 <!-- diagrama:fim -->
 
 🔧 = etapa que chama ferramenta durante a execução.
 
-O grafo tem quatro trechos, e a ordem entre eles não é estética:
+O grafo tem cinco trechos, e a ordem entre eles não é estética:
 
 1. **Fundação (01 → 02 → 03 → 04).** Primeiro o período e as premissas. Depois — e este é o ponto —
    a **cobertura das fontes**, antes de qualquer conta. Só então a base é puxada e os indicadores
@@ -95,27 +110,39 @@ O grafo tem quatro trechos, e a ordem entre eles não é estética:
 2. **Leitura em paralelo (05 a 08).** Call, WhatsApp, entregas e health score correm juntos, porque
    nenhum depende do outro.
 3. **Os cinco blocos (09 a 13).** Cada um consome o que precisa e **nenhum recalcula nada**.
-4. **Fechamento (14 → 15).** A conferência reconta direto da base e bloqueia se não bater; só depois
-   saem o deck e o documento.
+4. **Conferência e entrega (14 → 15).** A conferência reconta direto da base e bloqueia se não bater.
+   A 15 é o handoff: o check-in aprovado sai daqui.
+5. **Deck (16 a 19), em outra skill.** `checkin-colli` organiza o conteúdo na narrativa de slides;
+   `account-checkin-ropre-v2` compila as páginas no design system (HTML 1600×900, tokens, layouts),
+   roda o QA visual e publica. No diagrama esse trecho aparece pontilhado: é o mesmo fluxo, com outro
+   dono.
+
+O que o check-in cobra dessa última etapa vale como contrato, e está escrito no briefing de cada
+uma: número não se recalcula na diagramação, "não medido" não vira travessão nem some por falta de
+espaço, e o QA visual confere também **conteúdo** — todo número do deck existe no check-in aprovado.
 
 <!-- etapas:inicio -->
-| # | Etapa | Categoria | Origem | Chama ferramenta |
+| # | Etapa | Categoria | Executada por | Chama ferramenta |
 | --- | --- | --- | --- | --- |
-| 01 | Abrir o período e as premissas | Briefing | do zero | — |
-| 02 | Conferir a cobertura das fontes | Dados | do zero | sim |
-| 03 | Puxar a base do período | Dados | do zero | sim |
-| 04 | Calcular os indicadores do período | Análise | do zero | — |
-| 05 | Resumo de call → briefing | Briefing | catálogo · `Resumo de call → briefing` | — |
-| 06 | Varredura do grupo de WhatsApp | Pesquisa | do zero | sim |
-| 07 | Entregas e horas | Dados | do zero | sim |
-| 08 | Sinais do cockpit | Pesquisa | do zero | sim |
-| 09 | R · Resultados | Análise | do zero | — |
-| 10 | O · Objetivos | Análise | do zero | sim |
-| 11 | P · Premissas e Riscos | Análise | do zero | — |
-| 12 | E · Entregas | Análise | do zero | — |
-| 13 | E · Próximos Passos | Análise | do zero | — |
-| 14 | Conferência dos números | Revisão | do zero | — |
-| 15 | Entregar para o deck do design system | Entrega | do zero | sim |
+| 01 | Abrir o período e as premissas | Briefing | este workflow | — |
+| 02 | Conferir a cobertura das fontes | Dados | este workflow | sim |
+| 03 | Puxar a base do período | Dados | este workflow | sim |
+| 04 | Calcular os indicadores do período | Análise | este workflow | — |
+| 05 | Resumo de call → briefing | Briefing | este workflow · catálogo `Resumo de call → briefing` | — |
+| 06 | Varredura do grupo de WhatsApp | Pesquisa | este workflow | sim |
+| 07 | Entregas e horas | Dados | este workflow | sim |
+| 08 | Sinais do cockpit | Pesquisa | este workflow | sim |
+| 09 | R · Resultados | Análise | este workflow | — |
+| 10 | O · Objetivos | Análise | este workflow | sim |
+| 11 | P · Premissas e Riscos | Análise | este workflow | — |
+| 12 | E · Entregas | Análise | este workflow | — |
+| 13 | E · Próximos Passos | Análise | este workflow | — |
+| 14 | Conferência dos números | Revisão | este workflow | — |
+| 15 | Entregar para o deck do design system | Entrega | este workflow | sim |
+| 16 | Preparar o conteúdo para o deck | Entrega | `checkin-colli` | — |
+| 17 | Compilar as páginas no design system | Entrega | `account-checkin-ropre-v2` | sim |
+| 18 | QA visual | Revisão | `account-checkin-ropre-v2` | sim |
+| 19 | Publicar e entregar | Entrega | `account-checkin-ropre-v2` | sim |
 <!-- etapas:fim -->
 
 ### As leis que viajam em cada briefing
