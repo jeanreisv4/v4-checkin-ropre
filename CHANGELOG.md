@@ -14,6 +14,11 @@ Cada versão muda o que o cliente vê no check-in. Antes de publicar uma versão
 - **README reescrito em torno do workflow**: o desenho em diagrama, a tabela das etapas, as leis, e o
   motivo de a etapa de cobertura vir antes do cálculo. A implementação em Python passa a ser
   apresentada como referência, não como o produto.
+- **Duas seções novas no README**: *De onde vêm os dados*, com os servidores MCP da plataforma, o que
+  o pipeline de ingestão entrega por domínio (CRM, mídia paga, analytics, e-commerce, operações,
+  social) e onde cada fonte entra no ROPRE; e *O que o ETL faz*, explicando extrair, transformar e
+  carregar em prosa — normalização para o modelo canônico, cobertura antes da conta, e as duas saídas
+  vindas do mesmo pacote.
 
 ## v1.1 · 22/09/2026 · Flow ligado de verdade (MCP) e cobertura de fonte por canal
 

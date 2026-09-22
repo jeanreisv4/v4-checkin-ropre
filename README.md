@@ -142,21 +142,85 @@ de fonte furada sair como "não medido", com o motivo e o último dia com dado.
 
 ---
 
+## De onde vêm os dados
+
+O check-in não fala com ferramenta de cliente uma a uma. Ele consome a **plataforma de dados da
+companhia** (o Flow), que já concentra tudo, e onde um **pipeline de ingestão** (o Nekt) sincroniza
+as contas de cada projeto para um data warehouse. Isso muda o que o check-in precisa saber: em vez de
+uma integração por cliente, existe **um identificador de projeto** e, a partir dele, a plataforma
+resolve qual conta, qual tabela e qual fonte responder.
+
+O acesso é por servidores MCP, um por domínio. Nenhum endereço ou credencial mora neste repositório.
+
+| Servidor | O que responde | Onde entra no check-in |
+| --- | --- | --- |
+| **dados-flow** | tudo que o pipeline sincroniza do projeto: CRM, mídia paga, analytics, e-commerce, operações, social orgânico e as **metas** do período | blocos R e O |
+| **cockpit** | cadastro do projeto, health score e seu histórico, entradas e saídas (churn, aviso prévio, renovação), expansão, NPS e simulações de break-even | blocos O e P |
+| **BigQuery de calls** | as calls do projeto no período, com transcrição | bloco O e Próximos Passos |
+| **BigQuery de WhatsApp** | os grupos do cliente, atividade por dia e mensagens | bloco de Entregas (pendências) |
+| **catálogo de produtos** | os SKUs que a companhia vende | contexto de expansão |
+
+O que o pipeline entrega dentro do **dados-flow**, por domínio:
+
+| Domínio | Plataformas típicas | O que o check-in usa |
+| --- | --- | --- |
+| **CRM** | RD Station, HubSpot, Pipedrive, PipeRun, Kommo, Salesforce | negócios (criação, fechamento, status, valor, funil, etapa, motivo de perda), contatos e as marcas de atribuição — é daqui que sai faturamento, novo contra recorrente, safra e taxa de ganho |
+| **Mídia paga** | Google Ads, Meta Ads, LinkedIn Ads, TikTok Ads | investimento, impressões, cliques e leads por dia, campanha, conjunto, anúncio e criativo — daqui saem ROAS, CPL, CTR, CAC e a eficiência por safra |
+| **Analytics** | GA4, Search Console | sessões, eventos e conversões, para cruzar comportamento na página com o que entrou no CRM |
+| **E-commerce** | Shopify, VTEX, WooCommerce | pedidos e receita, quando o modelo do cliente é e-commerce em vez de inside sales |
+| **Operações** | Zendesk, Monday | chamados e tarefas, quando o projeto tem operação conectada |
+| **Social orgânico** | Instagram, Facebook Pages | alcance e engajamento do que não é pago |
+
+Duas coisas que a plataforma responde e que valem tanto quanto os números: **quais conexões o projeto
+tem e o estado de cada uma** (quando rodou pela última vez e se foi com sucesso) — é o insumo da
+etapa de cobertura — e **as metas cadastradas do período**, com atingimento e ritmo, que alimentam o
+bloco de Objetivos em vez de alguém digitar OKR à mão.
+
+Quando uma fonte não está na plataforma, entra um adaptador próprio: é o caso de um CRM ainda não
+conectado, ou de um canal de mídia cuja conexão quebrou e cujo dado só existe na planilha de
+acompanhamento. Por isso `fonte_por_canal` no `cliente.json`: cada canal tem um dono declarado, e o
+mesmo canal nunca é contado duas vezes.
+
+---
+
 ## A implementação de referência
 
 Mesmo desenho, em Python, para conferir número e para rodar fora da plataforma. É uma skill do
 [Claude Code](https://claude.com/claude-code) e funciona sozinha no terminal: Python puro, com
 `python-pptx` só na hora de gerar o deck.
 
+### O que o ETL faz
+
+**Extrair** é normalizar fontes que não se parecem. O CRM devolve oportunidade com nome de funil e
+data em UTC; a mídia devolve linha por anúncio e por dia; o WhatsApp devolve conversa; a call devolve
+transcrição. Cada adaptador traduz a sua fonte para **um único formato**, o modelo canônico, onde
+data é sempre dia local em ISO, dinheiro é sempre float em reais, e **todo negócio e todo contato
+chegam com a atribuição já resolvida** — se é da agência e por qual marca (tag, origem, mídia paga).
+O que a fonte não tem vira `None` e um aviso, nunca zero.
+
+**Transformar** é onde moram as decisões que costumam ser tomadas no improviso. Antes de qualquer
+conta, mede-se a **cobertura**: até que dia cada fonte tem dado no período, com tolerância de um dia
+porque plataforma de anúncio consolida em D-1. Só então vêm os números — vendas e receita por data de
+fechamento, novo contra recorrente, ticket, investimento, ROAS, CPL, CTR, CAC, taxa de entrada no
+CRM, break-even proporcional aos dias, resultado do período, safra por mês de criação com taxa de
+ganho e maturidade, motivos de perda, distribuição de ticket, cobertura de atribuição e a ponte com o
+que o cliente lança na planilha dele. Cada um desses sai `null` quando a fonte que ele depende não
+cobriu o período.
+
+**Carregar** é montar os cinco blocos do ROPRE a partir disso e renderizar duas saídas do mesmo
+pacote: o deck da reunião e o documento de revisão. Como as duas nascem do mesmo `checkin.json`, não
+existe versão com número diferente.
+
 ```
 extrair/       E — um adaptador por fonte, todos devolvem o mesmo formato
-  flow_mcp.py          plataforma de dados via MCP: mídia, metas, WhatsApp e calls
-  crm_nectarcrm.py     CRM direto, para quem não está na plataforma
-  midia_planilha.py    mídia paga em planilha diária
-  conversas_mcp.py     calls e WhatsApp já lidos, gravados para conferência
+  flow_mcp.py          plataforma de dados via MCP: mídia por dia e canal, metas,
+                       WhatsApp e calls, com descoberta das conexões do projeto
+  crm_nectarcrm.py     CRM direto, para quem ainda não está na plataforma
+  midia_planilha.py    mídia paga em planilha diária, para canal com conexão quebrada
+  conversas_mcp.py     calls e WhatsApp já lidos, gravados para conferência humana
 transformar/   T — o contrato e as contas
-  canonico.py          modelo canônico, períodos e validação
-  metricas.py          vendas, funil, mídia, break-even, safra, atribuição, cobertura
+  canonico.py          modelo canônico, períodos (quinzena, mês, quarter) e validação
+  metricas.py          cobertura, vendas, funil, mídia, break-even, safra, atribuição
 carregar/      L — os cinco blocos e os dois renderizadores
   blocos.py            monta o checkin.json
   documento.py         markdown para revisar antes da reunião
@@ -166,7 +230,8 @@ tests/regressao.py     as regras que não podem quebrar
 ```
 
 O contrato entre as camadas é `transformar/canonico.py`. Enquanto o adaptador devolver o canônico,
-trocar de CRM ou de origem dos dados não encosta no check-in.
+trocar de CRM ou de origem dos dados não encosta no check-in — foi assim que a mídia migrou da
+planilha para a plataforma sem uma linha de mudança no cálculo nem no deck.
 
 ```bash
 ./gerar.sh exemplo mensal 2026-08-15       # mês fechado
