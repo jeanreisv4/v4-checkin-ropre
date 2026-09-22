@@ -3,6 +3,24 @@
 Cada versão muda o que o cliente vê no check-in. Antes de publicar uma versão nova, rode
 `python3 tests/regressao.py`.
 
+## v1.5 · 22/09/2026 · Os servidores com o nome que têm no V4OS
+
+O painel *Ferramentas deste chat* do V4OS mostrou os servidores como eles aparecem lá dentro, e
+resolveu duas dúvidas de uma vez.
+
+- **`servidores` no JSON**: a chave usada aqui, o nome no V4OS (Dados Flow, Cockpit Colli, BigQuery ·
+  Ligações, BigQuery · WhatsApp, eKyte, V4 OS, Catálogo de Produtos), o que cada um responde, o tipo
+  de acesso e as etapas que o chamam. A validação confere que toda ferramenta aponta para um servidor
+  da lista e que a lista bate com as etapas.
+- **eKyte existe e está ligado** — cai a pendência de servidor e credencial; ficam só os nomes das
+  ferramentas de entregas e horas.
+- **V4 OS é um servidor** ("obrigatório para o contexto do projeto"): a etapa 01 passa a resolver o
+  projeto por ele, com `localize_project` e `cockpit_list_projects` como caminho pelo nome, e vira
+  etapa que chama ferramenta. A busca do projeto sai da 05.
+- **Dados Flow e Catálogo de Produtos usam token pessoal do Flow e vêm desligados no chat** — nova
+  pendência para quem roda. E o aviso do painel virou instrução de import: o que se liga no chat não
+  altera workflows; cada etapa liga os seus.
+
 ## v1.4 · 22/09/2026 · O JSON passa a bastar para quem constrói dentro do V4OS
 
 Revisão feita do lugar de quem recebe o repositório lá dentro e precisa montar o workflow sem

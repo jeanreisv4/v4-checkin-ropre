@@ -32,6 +32,16 @@ def dono(e):
     return e.get("executado_por", "este workflow")
 
 
+def servidores(wf):
+    return {s["chave"]: s for s in wf.get("servidores", [])}
+
+
+def rotulo_servidor(wf, chave):
+    """`Dados Flow (dados-flow)`: o nome do painel do V4OS e a chave usada aqui."""
+    s = servidores(wf).get(chave)
+    return f'**{s["no_v4os"]}** (`{chave}`)' if s else f'`{chave}`'
+
+
 def curto(titulo, largura=22):
     """Quebra o título em duas linhas para o nó do diagrama não ficar comprido."""
     palavras, linhas, atual = titulo.split(), [], ""
@@ -46,6 +56,10 @@ def curto(titulo, largura=22):
 
 
 # ------------------------------------------------------------------ validação
+
+def etapas_por_id(wf):
+    return {e["id"]: e for e in wf["etapas"]}
+
 
 def validar(wf):
     """Devolve a lista de problemas do JSON. Vazia = pode importar."""
@@ -77,6 +91,17 @@ def validar(wf):
             problemas.append(f"{i}: briefing vazio")
         if not e.get("entradas") or not e.get("saidas"):
             problemas.append(f"{i}: sem entradas ou sem saídas")
+    chaves = set(servidores(wf)) | {dono(e) for e in wf["etapas"] if e["origem"] == "outra_skill"}
+    for e in wf["etapas"]:
+        for f in e.get("ferramentas", []):
+            if f["servidor"] not in chaves:
+                problemas.append(f'{e["id"]}: servidor {f["servidor"]!r} não está em `servidores`')
+    for s in wf.get("servidores", []):
+        for i in s.get("etapas", []):
+            if i not in conhecidos:
+                problemas.append(f'servidor {s["chave"]}: etapa {i} não existe')
+            elif s["chave"] not in {f["servidor"] for f in etapas_por_id(wf)[i].get("ferramentas", [])}:
+                problemas.append(f'servidor {s["chave"]}: diz que entra na etapa {i}, mas a etapa não o chama')
     for c in wf["conexoes"]:
         if c["de"] not in conhecidos or c["para"] not in conhecidos:
             problemas.append(f"conexão {c['de']}→{c['para']} aponta para etapa inexistente")
@@ -174,7 +199,16 @@ def tabela_ferramentas(wf):
             continue
         for f in e.get("ferramentas", []):
             nome = f["ferramenta"] if f["ferramenta"] == "a confirmar" else f'`{f["ferramenta"]}`'
-            linhas.append(f'| {e["id"]} | **{f["servidor"]}** | {nome} | {f["para_que"]} |')
+            linhas.append(f'| {e["id"]} | {rotulo_servidor(wf, f["servidor"])} | {nome} | {f["para_que"]} |')
+    return "\n".join(linhas)
+
+
+def tabela_servidores(wf):
+    linhas = ["| No V4OS | Chave aqui | O que responde | Entra em | Acesso | Etapas |",
+              "| --- | --- | --- | --- | --- | --- |"]
+    for s in wf["servidores"]:
+        linhas.append(f'| **{s["no_v4os"]}** | `{s["chave"]}` | {s["responde"]} | {s["entra_em"]} | '
+                      f'{s["acesso"]} | {", ".join(s["etapas"]) or "—"} |')
     return "\n".join(linhas)
 
 
@@ -230,6 +264,13 @@ def spec(dados):
         "",
         tabela_saidas(wf),
         "",
+        "## Os servidores",
+        "",
+        "Com o nome que têm no painel *Ferramentas* do V4OS e a chave usada neste arquivo. O que se liga",
+        "no chat não altera workflows: cada etapa liga os seus.",
+        "",
+        tabela_servidores(wf),
+        "",
         "## O desenho",
         "",
         "```mermaid",
@@ -282,7 +323,7 @@ def spec(dados):
             p.append("")
             for f in e["ferramentas"]:
                 nome = f["ferramenta"] if f["ferramenta"] in ("a confirmar", "internas da skill") else f'`{f["ferramenta"]}`'
-                p.append(f'- **{f["servidor"]}** · {nome} — {f["para_que"]}')
+                p.append(f'- {rotulo_servidor(wf, f["servidor"])} · {nome} — {f["para_que"]}')
                 p.append(f'  Parâmetros: `{f["parametros"]}`')
                 if f.get("sql"):
                     p.append("  ```sql")
@@ -387,6 +428,7 @@ def atualizar_readme(wf):
     texto = preencher(texto, "import", passos_import(wf))
     texto = preencher(texto, "ferramentas", tabela_ferramentas(wf))
     texto = preencher(texto, "pendencias", tabela_pendencias(wf))
+    texto = preencher(texto, "servidores", tabela_servidores(wf))
     open(README, "w", encoding="utf-8").write(texto)
 
 

@@ -30,7 +30,7 @@ divergem.
 ```mermaid
 flowchart TD
     subgraph CHECKIN["Check-in ROPRE · este workflow"]
-        E01["<b>01</b> Abrir o período e as<br/>premissas"]
+        E01["<b>01</b> Abrir o período e as<br/>premissas 🔧"]
         E02["<b>02</b> Conferir a cobertura<br/>das fontes 🔧"]
         E03["<b>03</b> Puxar a base do<br/>período 🔧"]
         E04["<b>04</b> Calcular os<br/>indicadores do período"]
@@ -124,7 +124,7 @@ espaço, e o QA visual confere também **conteúdo** — todo número do deck ex
 <!-- etapas:inicio -->
 | # | Etapa | Categoria | Executada por | Leis | Chama ferramenta |
 | --- | --- | --- | --- | --- | --- |
-| 01 | Abrir o período e as premissas | Briefing | este workflow | 2 | — |
+| 01 | Abrir o período e as premissas | Briefing | este workflow | 2 | sim |
 | 02 | Conferir a cobertura das fontes | Dados | este workflow | 1 | sim |
 | 03 | Puxar a base do período | Dados | este workflow | 1, 2 | sim |
 | 04 | Calcular os indicadores do período | Análise | este workflow | 1, 2, 3 | — |
@@ -176,7 +176,7 @@ item de `conexoes`, assim:
 <!-- import:inicio -->
 1. Declare `entradas_do_workflow` como o formulário do workflow. A etapa 01 as consome; nada é perguntado ao usuário depois.
 2. O briefing de cada etapa é `briefing` **precedido do texto das leis** listadas em `leis_aplicaveis` (índices em `leis`, a partir de 1). Regra escrita fora do briefing não chega ao agente que executa a etapa.
-3. Para cada etapa com `chama_ferramenta`, ligue as ferramentas de `ferramentas` (servidor e nome). Os `cuidados` de cada ferramenta entram no briefing da etapa — são as pegadinhas que já custaram número errado.
+3. Para cada etapa com `chama_ferramenta`, ligue **no workflow** os servidores de `ferramentas` — a chave está em `servidores`, com o nome como aparece no painel *Ferramentas* do V4OS. O que se liga no chat não altera workflows. Os `cuidados` de cada ferramenta entram no briefing da etapa — são as pegadinhas que já custaram número errado.
 4. Etapa com `origem: catalogo` usa o template do catálogo em `etapa_do_catalogo`; o `briefing` é o complemento ao template.
 5. Etapa com `origem: outra_skill` não é criada aqui: é a etapa correspondente da skill em `executado_por`, e o `briefing` é o contrato que o check-in cobra dela.
 6. Ligue as `conexoes` (de → para). Etapas com o mesmo antecessor correm em paralelo.
@@ -208,20 +208,22 @@ entram no briefing da etapa. A tabela resume; a
 <!-- ferramentas:inicio -->
 | Etapa | Servidor | Ferramenta | Para quê |
 | --- | --- | --- | --- |
-| 02 | **dados-flow** | `flow_project_data_list_connections` | lista as conexões do projeto com categoria, plataforma, accountId, active, queryable, lastRunAt e lastRunStatus — é o estado de cada fonte |
-| 02 | **dados-flow** | `flow_media_query` | último dia com custo por canal: `SELECT MAX(date_start) FROM <tabela de insights> WHERE account_id = '<id>'` |
-| 02 | **dados-flow** | `flow_crm_query` | último negócio criado e atualizado, quando o CRM do projeto está na plataforma |
-| 03 | **dados-flow** | `flow_media_list_tables` | descobre a tabela de insights da conexão — o nome muda por conta e por plataforma |
-| 03 | **dados-flow** | `flow_media_query` | custo, impressões e cliques por dia, numa chamada só e exata |
-| 03 | **dados-flow** | `flow_media_conversion_summary` | leads por dia — desempacota as ações (`lead` ou `onsite_conversion.lead_grouped`) |
-| 03 | **dados-flow** | `flow_crm_list_tables + flow_crm_query` | negócios (id, criação, fechamento, status, valor, funil, etapa, motivo de perda, contato, tags, origem) e contatos (id, criação, origem, canal), quando o CRM está na plataforma |
-| 05 | **bigquery-calls** | `consultar_calls_por_tipo` | as calls do projeto no período, com trecho de transcrição |
-| 05 | **bigquery-calls** | `localize_project` | acha o projectDocumentId pelo nome do cliente |
-| 06 | **bigquery-whatsapp** | `whatsapp_resumir_grupos_queryon` | resumo do grupo no período: `latest_resumo`, `latest_status_risco`, `last_created_at` |
-| 07 | **ekyte** | a confirmar | entregas realizadas, previstas e horas do projeto |
-| 08 | **cockpit** | `cockpit_list_projects` | cadastro do projeto (filtro por `filtersJson`): datas, status, contrato |
-| 10 | **dados-flow** | `flow_goals_list` | metas cadastradas do período, com `target`, `actual`, `attainment` e `pace` |
-| 15 | **plataforma** | a confirmar | entregar o pacote aprovado à etapa 16 (`checkin-colli`) e gravar o documento de revisão |
+| 01 | **V4 OS** (`v4os`) | a confirmar | o projeto em que o workflow está rodando, sem perguntar |
+| 01 | **BigQuery · Ligações** (`bigquery-calls`) | `localize_project` | acha o projectDocumentId pelo nome do cliente |
+| 01 | **Cockpit Colli** (`cockpit`) | `cockpit_list_projects` | o mesmo, pelo cadastro do cockpit, com datas e status do contrato |
+| 02 | **Dados Flow** (`dados-flow`) | `flow_project_data_list_connections` | lista as conexões do projeto com categoria, plataforma, accountId, active, queryable, lastRunAt e lastRunStatus — é o estado de cada fonte |
+| 02 | **Dados Flow** (`dados-flow`) | `flow_media_query` | último dia com custo por canal: `SELECT MAX(date_start) FROM <tabela de insights> WHERE account_id = '<id>'` |
+| 02 | **Dados Flow** (`dados-flow`) | `flow_crm_query` | último negócio criado e atualizado, quando o CRM do projeto está na plataforma |
+| 03 | **Dados Flow** (`dados-flow`) | `flow_media_list_tables` | descobre a tabela de insights da conexão — o nome muda por conta e por plataforma |
+| 03 | **Dados Flow** (`dados-flow`) | `flow_media_query` | custo, impressões e cliques por dia, numa chamada só e exata |
+| 03 | **Dados Flow** (`dados-flow`) | `flow_media_conversion_summary` | leads por dia — desempacota as ações (`lead` ou `onsite_conversion.lead_grouped`) |
+| 03 | **Dados Flow** (`dados-flow`) | `flow_crm_list_tables + flow_crm_query` | negócios (id, criação, fechamento, status, valor, funil, etapa, motivo de perda, contato, tags, origem) e contatos (id, criação, origem, canal), quando o CRM está na plataforma |
+| 05 | **BigQuery · Ligações** (`bigquery-calls`) | `consultar_calls_por_tipo` | as calls do projeto no período, com trecho de transcrição |
+| 06 | **BigQuery · WhatsApp** (`bigquery-whatsapp`) | `whatsapp_resumir_grupos_queryon` | resumo do grupo no período: `latest_resumo`, `latest_status_risco`, `last_created_at` |
+| 07 | **eKyte** (`ekyte`) | a confirmar | entregas realizadas, previstas e horas do projeto |
+| 08 | **Cockpit Colli** (`cockpit`) | `cockpit_list_projects` | cadastro do projeto (filtro por `filtersJson`): datas, status, contrato |
+| 10 | **Dados Flow** (`dados-flow`) | `flow_goals_list` | metas cadastradas do período, com `target`, `actual`, `attainment` e `pace` |
+| 15 | **V4 OS** (`v4os`) | a confirmar | entregar o pacote aprovado à etapa 16 (`checkin-colli`) e gravar o documento de revisão |
 <!-- ferramentas:fim -->
 
 **O que só quem está dentro da plataforma responde.** O repositório vai até onde dá para ir de fora.
@@ -233,12 +235,14 @@ Estes pontos ficaram declarados no JSON como pendência, e cada um tem um fallba
 | schema de export do Studio | para o mapeamento deste JSON ser mecânico em vez de manual | V4OS |
 | catálogo completo de etapas | 06, 07 e 08 podem ter template pronto; só `Resumo de call → briefing` foi reusada | V4OS |
 | como uma etapa declara a ferramenta MCP que chama | vale para toda etapa marcada 🔧 | V4OS |
+| ferramentas do V4 OS (contexto do projeto) | para a etapa 01 pegar o projeto do contexto em vez do formulário, e para a 15 acionar a próxima skill | V4OS |
 | como uma etapa aciona outra skill | é a passagem 15 → 16 | V4OS |
 | contrato de entrada de `checkin-colli` e de `account-checkin-ropre-v2` | até saber o formato que elas esperam, o check-in entrega no de referencias/checkin.exemplo.json | dono das skills |
-| servidor e credencial do ekyte | a etapa 07 está sem fonte; enquanto isso, entregas entram pela entrada `entregas_do_periodo` | V4OS |
+| ferramentas do eKyte | o servidor existe e está ligado no V4OS; faltam os nomes das ferramentas de entregas e horas para a etapa 07 — até lá, entram pela entrada `entregas_do_periodo` | V4OS |
 | ferramentas de health score, NPS e churn do cockpit | etapa 08; só `cockpit_list_projects` é conhecida | V4OS |
 | onde as calls do projeto ficam registradas | `consultar_calls_por_tipo` voltou vazio no primeiro cliente | V4OS |
 | produto do workflow | cabeçalho está como *a confirmar* | quem publica |
+| token pessoal do Flow de quem roda | Dados Flow e Catálogo de Produtos usam o token pessoal e vêm desligados no chat; sem ele, 02, 03 e 10 não respondem | quem roda |
 <!-- pendencias:fim -->
 
 ---
@@ -251,15 +255,29 @@ as contas de cada projeto para um data warehouse. Isso muda o que o check-in pre
 uma integração por cliente, existe **um identificador de projeto** e, a partir dele, a plataforma
 resolve qual conta, qual tabela e qual fonte responder.
 
-O acesso é por servidores MCP, um por domínio. Nenhum endereço ou credencial mora neste repositório.
+O acesso é por servidores MCP, um por domínio, todos já ligados dentro do V4OS. Nenhum endereço ou
+credencial mora neste repositório.
 
-| Servidor | O que responde | Onde entra no check-in |
-| --- | --- | --- |
-| **dados-flow** | tudo que o pipeline sincroniza do projeto: CRM, mídia paga, analytics, e-commerce, operações, social orgânico e as **metas** do período | blocos R e O |
-| **cockpit** | cadastro do projeto, health score e seu histórico, entradas e saídas (churn, aviso prévio, renovação), expansão, NPS e simulações de break-even | blocos O e P |
-| **BigQuery de calls** | as calls do projeto no período, com transcrição | bloco O e Próximos Passos |
-| **BigQuery de WhatsApp** | os grupos do cliente, atividade por dia e mensagens | bloco de Entregas (pendências) |
-| **catálogo de produtos** | os SKUs que a companhia vende | contexto de expansão |
+Os nomes abaixo são os do painel **Ferramentas** do V4OS; a chave é como este repositório os chama.
+Dois deles — Dados Flow e Catálogo de Produtos — usam o **token pessoal do Flow** de quem roda e vêm
+desligados no chat. O painel avisa que o que se liga no chat não altera workflows: no workflow, cada
+etapa liga os servidores que chama.
+
+<!-- servidores:inicio -->
+| No V4OS | Chave aqui | O que responde | Entra em | Acesso | Etapas |
+| --- | --- | --- | --- | --- | --- |
+| **Dados Flow** | `dados-flow` | tudo que o pipeline sincroniza do projeto: CRM, mídia paga, analytics, e-commerce, operações, social orgânico, as conexões com o estado de cada uma, e as metas do período | cobertura (02), base (03) e metas (10) — blocos R e O | token pessoal do Flow; no chat vem desligado por padrão | 02, 03, 10 |
+| **Cockpit Colli** | `cockpit` | cadastro do projeto, health score e histórico, entradas e saídas (churn, aviso prévio, renovação), expansão, NPS e simulações de break-even | projeto (01) e sinais de risco (08) — blocos O e P | credencial da plataforma | 01, 08 |
+| **BigQuery · Ligações** | `bigquery-calls` | as calls do projeto no período, com trecho de transcrição | acordos, pendências e riscos da call (05) — bloco O e Próximos Passos | credencial da plataforma | 01, 05 |
+| **BigQuery · WhatsApp** | `bigquery-whatsapp` | os grupos do cliente, atividade por dia e resumos | pendências (06) — bloco de Entregas | credencial da plataforma | 06 |
+| **eKyte** | `ekyte` | campanhas e tarefas de marketing — entregas realizadas, previstas e horas | entregas e horas (07) — bloco de Entregas | credencial da plataforma; ferramentas a confirmar | 07 |
+| **V4 OS** | `v4os` | o contexto do projeto em que o workflow roda (obrigatório na plataforma) | projeto (01) e handoff para a próxima skill (15) | obrigatório; ferramentas a confirmar | 01, 15 |
+| **Catálogo de Produtos** | `catalogo-produtos` | os SKUs que a companhia vende | contexto de expansão; nenhuma etapa depende dele | token pessoal do Flow | — |
+<!-- servidores:fim -->
+
+Também existem no chat, e não entram no check-in: Google Drive (possível destino do documento de
+revisão), Figma (é da `design-system-pro`), Google Tag Manager · Colli, Cloudflare, Firecrawl, Apify
+e n8n Ops.
 
 O que o pipeline entrega dentro do **dados-flow**, por domínio:
 

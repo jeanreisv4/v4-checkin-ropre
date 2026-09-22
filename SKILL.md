@@ -5,7 +5,7 @@ description: Monta o check-in de cliente no modelo ROPRE (Resultados, Objetivos,
 
 # Check-in ROPRE
 
-**Versão 1.4 (22/09/2026).** Histórico em `CHANGELOG.md`. Caminhos relativos à pasta da skill
+**Versão 1.5 (22/09/2026).** Histórico em `CHANGELOG.md`. Caminhos relativos à pasta da skill
 (`.claude/skills/checkin-ropre/`).
 
 O check-in é um ETL, não um relatório escrito à mão:
@@ -43,7 +43,8 @@ e confirme cada campo com o usuário — fee, verba, margem, funis de venda e de
 
 **1.2 Fonte.** Pergunte de onde vêm os dados deste cliente:
 - **Flow (padrão)** — `extrair/flow_mcp.py` fala MCP direto com os servidores da V4 (`dados-flow`,
-  `bigquery-whatsapp`, `bigquery-calls`, `cockpit`). Precisa de `flow.project_document_id` no
+  `bigquery-whatsapp`, `bigquery-calls`, `cockpit` — no V4OS aparecem como Dados Flow, BigQuery ·
+  WhatsApp, BigQuery · Ligações e Cockpit Colli). Precisa de `flow.project_document_id` no
   `cliente.json` e das credenciais em `~/.config/v4-flow/mcp.json` (chmod 600).
   Para achar o projeto: `localize_project(search_text="<cliente>")` no `bigquery-calls`.
   **Um cliente pode ter mais de um projeto** — é comum a assessoria e um produto adicional serem

@@ -1,5 +1,5 @@
 {
-  "formato": "checkin-ropre/workflow/1.1",
+  "formato": "checkin-ropre/workflow/1.2",
   "gerado_por": "https://github.com/jeanreisv4/v4-checkin-ropre",
   "workflow": {
     "nome": "Check-in ROPRE — quinzenal e mensal",
@@ -11,6 +11,81 @@
       "quinzenal",
       "mensal",
       "quarter"
+    ],
+    "servidores": [
+      {
+        "chave": "dados-flow",
+        "no_v4os": "Dados Flow",
+        "responde": "tudo que o pipeline sincroniza do projeto: CRM, mídia paga, analytics, e-commerce, operações, social orgânico, as conexões com o estado de cada uma, e as metas do período",
+        "entra_em": "cobertura (02), base (03) e metas (10) — blocos R e O",
+        "acesso": "token pessoal do Flow; no chat vem desligado por padrão",
+        "etapas": [
+          "02",
+          "03",
+          "10"
+        ]
+      },
+      {
+        "chave": "cockpit",
+        "no_v4os": "Cockpit Colli",
+        "responde": "cadastro do projeto, health score e histórico, entradas e saídas (churn, aviso prévio, renovação), expansão, NPS e simulações de break-even",
+        "entra_em": "projeto (01) e sinais de risco (08) — blocos O e P",
+        "acesso": "credencial da plataforma",
+        "etapas": [
+          "01",
+          "08"
+        ]
+      },
+      {
+        "chave": "bigquery-calls",
+        "no_v4os": "BigQuery · Ligações",
+        "responde": "as calls do projeto no período, com trecho de transcrição",
+        "entra_em": "acordos, pendências e riscos da call (05) — bloco O e Próximos Passos",
+        "acesso": "credencial da plataforma",
+        "etapas": [
+          "01",
+          "05"
+        ]
+      },
+      {
+        "chave": "bigquery-whatsapp",
+        "no_v4os": "BigQuery · WhatsApp",
+        "responde": "os grupos do cliente, atividade por dia e resumos",
+        "entra_em": "pendências (06) — bloco de Entregas",
+        "acesso": "credencial da plataforma",
+        "etapas": [
+          "06"
+        ]
+      },
+      {
+        "chave": "ekyte",
+        "no_v4os": "eKyte",
+        "responde": "campanhas e tarefas de marketing — entregas realizadas, previstas e horas",
+        "entra_em": "entregas e horas (07) — bloco de Entregas",
+        "acesso": "credencial da plataforma; ferramentas a confirmar",
+        "etapas": [
+          "07"
+        ]
+      },
+      {
+        "chave": "v4os",
+        "no_v4os": "V4 OS",
+        "responde": "o contexto do projeto em que o workflow roda (obrigatório na plataforma)",
+        "entra_em": "projeto (01) e handoff para a próxima skill (15)",
+        "acesso": "obrigatório; ferramentas a confirmar",
+        "etapas": [
+          "01",
+          "15"
+        ]
+      },
+      {
+        "chave": "catalogo-produtos",
+        "no_v4os": "Catálogo de Produtos",
+        "responde": "os SKUs que a companhia vende",
+        "entra_em": "contexto de expansão; nenhuma etapa depende dele",
+        "acesso": "token pessoal do Flow",
+        "etapas": []
+      }
     ],
     "entradas_do_workflow": [
       {
@@ -86,23 +161,50 @@
         "categoria": "Briefing",
         "origem": "do_zero",
         "etapa_do_catalogo": null,
-        "chama_ferramenta": false,
+        "chama_ferramenta": true,
         "executado_por": "este workflow",
         "leis_aplicaveis": [
           2
         ],
         "entradas": [
-          "cliente",
+          "projeto (do contexto do V4 OS ou do formulário)",
           "cadência (`quinzenal` | `mensal` | `quarter`)",
           "data de referência"
         ],
         "saidas": [
+          "projeto resolvido (projectDocumentId)",
           "período resolvido",
           "premissas do projeto",
           "regra de atribuição"
         ],
-        "ferramentas": [],
-        "briefing": "Resolva o período: quinzena fecha em 15 ou no último dia do mês; mês fecha no último dia; quarter\nfecha no trimestre. Período que ainda não terminou sai marcado **parcial**, com a data de corte.\n\nTraga do cadastro do projeto: fee, verba de mídia contratada (bruta e líquida, com o imposto),\nmargem de contribuição, funis de venda, funil de recorrência e a **regra de atribuição** com a data\nem que foi fechada.\n\nPremissa sem data de confirmação sai sinalizada. Margem e regra de atribuição são as duas que mais\nmudam veredito — se estiverem \"a confirmar\", isso precisa aparecer no bloco de Premissas."
+        "ferramentas": [
+          {
+            "servidor": "v4os",
+            "ferramenta": "a confirmar",
+            "para_que": "o projeto em que o workflow está rodando, sem perguntar",
+            "parametros": "a confirmar",
+            "cuidados": [
+              "se o contexto não trouxer o projeto, o `projeto` do formulário manda."
+            ]
+          },
+          {
+            "servidor": "bigquery-calls",
+            "ferramenta": "localize_project",
+            "para_que": "acha o projectDocumentId pelo nome do cliente",
+            "parametros": "{search_text}",
+            "cuidados": [
+              "pode devolver mais de um projeto para o mesmo cliente; não escolha sozinho."
+            ]
+          },
+          {
+            "servidor": "cockpit",
+            "ferramenta": "cockpit_list_projects",
+            "para_que": "o mesmo, pelo cadastro do cockpit, com datas e status do contrato",
+            "parametros": "{filtersJson}",
+            "cuidados": []
+          }
+        ],
+        "briefing": "Resolva o projeto: se o workflow roda dentro de um projeto, o contexto do V4 OS já diz qual é;\nsenão, ache o `projectDocumentId` pelo nome. **Um cliente pode ter mais de um projeto** —\nassessoria e produto adicional são contratos separados — e cada projeto é um check-in.\nConfirme qual antes de seguir.\n\nResolva o período: quinzena fecha em 15 ou no último dia do mês; mês fecha no último dia; quarter\nfecha no trimestre. Período que ainda não terminou sai marcado **parcial**, com a data de corte.\n\nTraga do cadastro do projeto: fee, verba de mídia contratada (bruta e líquida, com o imposto),\nmargem de contribuição, funis de venda, funil de recorrência e a **regra de atribuição** com a data\nem que foi fechada.\n\nPremissa sem data de confirmação sai sinalizada. Margem e regra de atribuição são as duas que mais\nmudam veredito — se estiverem \"a confirmar\", isso precisa aparecer no bloco de Premissas."
       },
       {
         "id": "02",
@@ -276,13 +378,6 @@
               "no primeiro cliente voltou vazio no período — confirmar onde as calls daquele projeto ficam registradas. Sem call, as três listas saem vazias e o bloco diz que não houve.",
               "esta etapa é do catálogo: se o template não buscar a transcrição sozinho, a busca entra como etapa de dados antes dela."
             ]
-          },
-          {
-            "servidor": "bigquery-calls",
-            "ferramenta": "localize_project",
-            "para_que": "acha o projectDocumentId pelo nome do cliente",
-            "parametros": "{search_text}",
-            "cuidados": []
           }
         ],
         "briefing": "Além do que o template do catálogo já faz, separe a saída em três listas: **acordos** (o que ficou\ncombinado e quem assumiu), **pendências** (o que ficou aberto e de quem é a bola) e **riscos**\n(ameaça ao resultado levantada na conversa).\n\nSó entra o que foi dito. Não infira compromisso a partir de tom, de silêncio ou de \"a gente vê\nisso\". Sem call no período, devolva as três listas vazias e diga que não houve."
@@ -554,7 +649,7 @@
         ],
         "ferramentas": [
           {
-            "servidor": "plataforma",
+            "servidor": "v4os",
             "ferramenta": "a confirmar",
             "para_que": "entregar o pacote aprovado à etapa 16 (`checkin-colli`) e gravar o documento de revisão",
             "parametros": "o pacote de referencias/checkin.exemplo.json",
@@ -810,7 +905,7 @@
       "passos": [
         "Declare `entradas_do_workflow` como o formulário do workflow. A etapa 01 as consome; nada é perguntado ao usuário depois.",
         "O briefing de cada etapa é `briefing` **precedido do texto das leis** listadas em `leis_aplicaveis` (índices em `leis`, a partir de 1). Regra escrita fora do briefing não chega ao agente que executa a etapa.",
-        "Para cada etapa com `chama_ferramenta`, ligue as ferramentas de `ferramentas` (servidor e nome). Os `cuidados` de cada ferramenta entram no briefing da etapa — são as pegadinhas que já custaram número errado.",
+        "Para cada etapa com `chama_ferramenta`, ligue **no workflow** os servidores de `ferramentas` — a chave está em `servidores`, com o nome como aparece no painel *Ferramentas* do V4OS. O que se liga no chat não altera workflows. Os `cuidados` de cada ferramenta entram no briefing da etapa — são as pegadinhas que já custaram número errado.",
         "Etapa com `origem: catalogo` usa o template do catálogo em `etapa_do_catalogo`; o `briefing` é o complemento ao template.",
         "Etapa com `origem: outra_skill` não é criada aqui: é a etapa correspondente da skill em `executado_por`, e o `briefing` é o contrato que o check-in cobra dela.",
         "Ligue as `conexoes` (de → para). Etapas com o mesmo antecessor correm em paralelo.",
@@ -833,6 +928,11 @@
           "quem": "V4OS"
         },
         {
+          "o_que": "ferramentas do V4 OS (contexto do projeto)",
+          "por_que": "para a etapa 01 pegar o projeto do contexto em vez do formulário, e para a 15 acionar a próxima skill",
+          "quem": "V4OS"
+        },
+        {
           "o_que": "como uma etapa aciona outra skill",
           "por_que": "é a passagem 15 → 16",
           "quem": "V4OS"
@@ -843,8 +943,8 @@
           "quem": "dono das skills"
         },
         {
-          "o_que": "servidor e credencial do ekyte",
-          "por_que": "a etapa 07 está sem fonte; enquanto isso, entregas entram pela entrada `entregas_do_periodo`",
+          "o_que": "ferramentas do eKyte",
+          "por_que": "o servidor existe e está ligado no V4OS; faltam os nomes das ferramentas de entregas e horas para a etapa 07 — até lá, entram pela entrada `entregas_do_periodo`",
           "quem": "V4OS"
         },
         {
@@ -861,6 +961,11 @@
           "o_que": "produto do workflow",
           "por_que": "cabeçalho está como *a confirmar*",
           "quem": "quem publica"
+        },
+        {
+          "o_que": "token pessoal do Flow de quem roda",
+          "por_que": "Dados Flow e Catálogo de Produtos usam o token pessoal e vêm desligados no chat; sem ele, 02, 03 e 10 não respondem",
+          "quem": "quem roda"
         }
       ]
     }

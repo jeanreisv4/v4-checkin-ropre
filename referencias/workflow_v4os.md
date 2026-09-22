@@ -45,12 +45,27 @@ O formulário que se preenche para rodar. A etapa 01 consome tudo isso; nada é 
 | **documento de revisão** | 15 | markdown na ordem dos blocos, com as tabelas completas e a página de fontes — para conferir antes da reunião e registrar depois. |
 | **deck publicado** | 19 (account-checkin-ropre-v2) | HTML 1600×900 no design system da companhia, com os mesmos números do check-in aprovado. |
 
+## Os servidores
+
+Com o nome que têm no painel *Ferramentas* do V4OS e a chave usada neste arquivo. O que se liga
+no chat não altera workflows: cada etapa liga os seus.
+
+| No V4OS | Chave aqui | O que responde | Entra em | Acesso | Etapas |
+| --- | --- | --- | --- | --- | --- |
+| **Dados Flow** | `dados-flow` | tudo que o pipeline sincroniza do projeto: CRM, mídia paga, analytics, e-commerce, operações, social orgânico, as conexões com o estado de cada uma, e as metas do período | cobertura (02), base (03) e metas (10) — blocos R e O | token pessoal do Flow; no chat vem desligado por padrão | 02, 03, 10 |
+| **Cockpit Colli** | `cockpit` | cadastro do projeto, health score e histórico, entradas e saídas (churn, aviso prévio, renovação), expansão, NPS e simulações de break-even | projeto (01) e sinais de risco (08) — blocos O e P | credencial da plataforma | 01, 08 |
+| **BigQuery · Ligações** | `bigquery-calls` | as calls do projeto no período, com trecho de transcrição | acordos, pendências e riscos da call (05) — bloco O e Próximos Passos | credencial da plataforma | 01, 05 |
+| **BigQuery · WhatsApp** | `bigquery-whatsapp` | os grupos do cliente, atividade por dia e resumos | pendências (06) — bloco de Entregas | credencial da plataforma | 06 |
+| **eKyte** | `ekyte` | campanhas e tarefas de marketing — entregas realizadas, previstas e horas | entregas e horas (07) — bloco de Entregas | credencial da plataforma; ferramentas a confirmar | 07 |
+| **V4 OS** | `v4os` | o contexto do projeto em que o workflow roda (obrigatório na plataforma) | projeto (01) e handoff para a próxima skill (15) | obrigatório; ferramentas a confirmar | 01, 15 |
+| **Catálogo de Produtos** | `catalogo-produtos` | os SKUs que a companhia vende | contexto de expansão; nenhuma etapa depende dele | token pessoal do Flow | — |
+
 ## O desenho
 
 ```mermaid
 flowchart TD
     subgraph CHECKIN["Check-in ROPRE · este workflow"]
-        E01["<b>01</b> Abrir o período e as<br/>premissas"]
+        E01["<b>01</b> Abrir o período e as<br/>premissas 🔧"]
         E02["<b>02</b> Conferir a cobertura<br/>das fontes 🔧"]
         E03["<b>03</b> Puxar a base do<br/>período 🔧"]
         E04["<b>04</b> Calcular os<br/>indicadores do período"]
@@ -127,7 +142,7 @@ Este arquivo é a especificação neutra do workflow, não o export do Studio. Q
 
 1. Declare `entradas_do_workflow` como o formulário do workflow. A etapa 01 as consome; nada é perguntado ao usuário depois.
 2. O briefing de cada etapa é `briefing` **precedido do texto das leis** listadas em `leis_aplicaveis` (índices em `leis`, a partir de 1). Regra escrita fora do briefing não chega ao agente que executa a etapa.
-3. Para cada etapa com `chama_ferramenta`, ligue as ferramentas de `ferramentas` (servidor e nome). Os `cuidados` de cada ferramenta entram no briefing da etapa — são as pegadinhas que já custaram número errado.
+3. Para cada etapa com `chama_ferramenta`, ligue **no workflow** os servidores de `ferramentas` — a chave está em `servidores`, com o nome como aparece no painel *Ferramentas* do V4OS. O que se liga no chat não altera workflows. Os `cuidados` de cada ferramenta entram no briefing da etapa — são as pegadinhas que já custaram número errado.
 4. Etapa com `origem: catalogo` usa o template do catálogo em `etapa_do_catalogo`; o `briefing` é o complemento ao template.
 5. Etapa com `origem: outra_skill` não é criada aqui: é a etapa correspondente da skill em `executado_por`, e o `briefing` é o contrato que o check-in cobra dela.
 6. Ligue as `conexoes` (de → para). Etapas com o mesmo antecessor correm em paralelo.
@@ -150,35 +165,42 @@ agente não pode depender de lembrar.
 
 ## As ferramentas, por etapa
 
-As etapas 02, 03, 06, 07, 08, 10, 15 chamam ferramenta. Servidor, nome e parâmetros de cada uma,
+As etapas 01, 02, 03, 06, 07, 08, 10, 15 chamam ferramenta. Servidor, nome e parâmetros de cada uma,
 com os cuidados que já custaram número errado — eles entram no briefing da etapa.
 
 | Etapa | Servidor | Ferramenta | Para quê |
 | --- | --- | --- | --- |
-| 02 | **dados-flow** | `flow_project_data_list_connections` | lista as conexões do projeto com categoria, plataforma, accountId, active, queryable, lastRunAt e lastRunStatus — é o estado de cada fonte |
-| 02 | **dados-flow** | `flow_media_query` | último dia com custo por canal: `SELECT MAX(date_start) FROM <tabela de insights> WHERE account_id = '<id>'` |
-| 02 | **dados-flow** | `flow_crm_query` | último negócio criado e atualizado, quando o CRM do projeto está na plataforma |
-| 03 | **dados-flow** | `flow_media_list_tables` | descobre a tabela de insights da conexão — o nome muda por conta e por plataforma |
-| 03 | **dados-flow** | `flow_media_query` | custo, impressões e cliques por dia, numa chamada só e exata |
-| 03 | **dados-flow** | `flow_media_conversion_summary` | leads por dia — desempacota as ações (`lead` ou `onsite_conversion.lead_grouped`) |
-| 03 | **dados-flow** | `flow_crm_list_tables + flow_crm_query` | negócios (id, criação, fechamento, status, valor, funil, etapa, motivo de perda, contato, tags, origem) e contatos (id, criação, origem, canal), quando o CRM está na plataforma |
-| 05 | **bigquery-calls** | `consultar_calls_por_tipo` | as calls do projeto no período, com trecho de transcrição |
-| 05 | **bigquery-calls** | `localize_project` | acha o projectDocumentId pelo nome do cliente |
-| 06 | **bigquery-whatsapp** | `whatsapp_resumir_grupos_queryon` | resumo do grupo no período: `latest_resumo`, `latest_status_risco`, `last_created_at` |
-| 07 | **ekyte** | a confirmar | entregas realizadas, previstas e horas do projeto |
-| 08 | **cockpit** | `cockpit_list_projects` | cadastro do projeto (filtro por `filtersJson`): datas, status, contrato |
-| 10 | **dados-flow** | `flow_goals_list` | metas cadastradas do período, com `target`, `actual`, `attainment` e `pace` |
-| 15 | **plataforma** | a confirmar | entregar o pacote aprovado à etapa 16 (`checkin-colli`) e gravar o documento de revisão |
+| 01 | **V4 OS** (`v4os`) | a confirmar | o projeto em que o workflow está rodando, sem perguntar |
+| 01 | **BigQuery · Ligações** (`bigquery-calls`) | `localize_project` | acha o projectDocumentId pelo nome do cliente |
+| 01 | **Cockpit Colli** (`cockpit`) | `cockpit_list_projects` | o mesmo, pelo cadastro do cockpit, com datas e status do contrato |
+| 02 | **Dados Flow** (`dados-flow`) | `flow_project_data_list_connections` | lista as conexões do projeto com categoria, plataforma, accountId, active, queryable, lastRunAt e lastRunStatus — é o estado de cada fonte |
+| 02 | **Dados Flow** (`dados-flow`) | `flow_media_query` | último dia com custo por canal: `SELECT MAX(date_start) FROM <tabela de insights> WHERE account_id = '<id>'` |
+| 02 | **Dados Flow** (`dados-flow`) | `flow_crm_query` | último negócio criado e atualizado, quando o CRM do projeto está na plataforma |
+| 03 | **Dados Flow** (`dados-flow`) | `flow_media_list_tables` | descobre a tabela de insights da conexão — o nome muda por conta e por plataforma |
+| 03 | **Dados Flow** (`dados-flow`) | `flow_media_query` | custo, impressões e cliques por dia, numa chamada só e exata |
+| 03 | **Dados Flow** (`dados-flow`) | `flow_media_conversion_summary` | leads por dia — desempacota as ações (`lead` ou `onsite_conversion.lead_grouped`) |
+| 03 | **Dados Flow** (`dados-flow`) | `flow_crm_list_tables + flow_crm_query` | negócios (id, criação, fechamento, status, valor, funil, etapa, motivo de perda, contato, tags, origem) e contatos (id, criação, origem, canal), quando o CRM está na plataforma |
+| 05 | **BigQuery · Ligações** (`bigquery-calls`) | `consultar_calls_por_tipo` | as calls do projeto no período, com trecho de transcrição |
+| 06 | **BigQuery · WhatsApp** (`bigquery-whatsapp`) | `whatsapp_resumir_grupos_queryon` | resumo do grupo no período: `latest_resumo`, `latest_status_risco`, `last_created_at` |
+| 07 | **eKyte** (`ekyte`) | a confirmar | entregas realizadas, previstas e horas do projeto |
+| 08 | **Cockpit Colli** (`cockpit`) | `cockpit_list_projects` | cadastro do projeto (filtro por `filtersJson`): datas, status, contrato |
+| 10 | **Dados Flow** (`dados-flow`) | `flow_goals_list` | metas cadastradas do período, com `target`, `actual`, `attainment` e `pace` |
+| 15 | **V4 OS** (`v4os`) | a confirmar | entregar o pacote aprovado à etapa 16 (`checkin-colli`) e gravar o documento de revisão |
 
 ---
 
 ## 01 · Abrir o período e as premissas
 
-**Categoria:** Briefing · do zero
-**Entradas:** cliente, cadência (`quinzenal` | `mensal` | `quarter`), data de referência
-**Saídas:** período resolvido, premissas do projeto, regra de atribuição
+**Categoria:** Briefing · do zero · *chama ferramenta*
+**Entradas:** projeto (do contexto do V4 OS ou do formulário), cadência (`quinzenal` | `mensal` | `quarter`), data de referência
+**Saídas:** projeto resolvido (projectDocumentId), período resolvido, premissas do projeto, regra de atribuição
 **Leis que entram neste briefing:** 2
 
+> Resolva o projeto: se o workflow roda dentro de um projeto, o contexto do V4 OS já diz qual é;
+> senão, ache o `projectDocumentId` pelo nome. **Um cliente pode ter mais de um projeto** —
+> assessoria e produto adicional são contratos separados — e cada projeto é um check-in.
+> Confirme qual antes de seguir.
+>
 > Resolva o período: quinzena fecha em 15 ou no último dia do mês; mês fecha no último dia; quarter
 > fecha no trimestre. Período que ainda não terminou sai marcado **parcial**, com a data de corte.
 >
@@ -188,6 +210,17 @@ com os cuidados que já custaram número errado — eles entram no briefing da e
 >
 > Premissa sem data de confirmação sai sinalizada. Margem e regra de atribuição são as duas que mais
 > mudam veredito — se estiverem "a confirmar", isso precisa aparecer no bloco de Premissas.
+
+**Ferramentas**
+
+- **V4 OS** (`v4os`) · a confirmar — o projeto em que o workflow está rodando, sem perguntar
+  Parâmetros: `a confirmar`
+  - se o contexto não trouxer o projeto, o `projeto` do formulário manda.
+- **BigQuery · Ligações** (`bigquery-calls`) · `localize_project` — acha o projectDocumentId pelo nome do cliente
+  Parâmetros: `{search_text}`
+  - pode devolver mais de um projeto para o mesmo cliente; não escolha sozinho.
+- **Cockpit Colli** (`cockpit`) · `cockpit_list_projects` — o mesmo, pelo cadastro do cockpit, com datas e status do contrato
+  Parâmetros: `{filtersJson}`
 
 ## 02 · Conferir a cobertura das fontes
 
@@ -213,15 +246,15 @@ com os cuidados que já custaram número errado — eles entram no briefing da e
 
 **Ferramentas**
 
-- **dados-flow** · `flow_project_data_list_connections` — lista as conexões do projeto com categoria, plataforma, accountId, active, queryable, lastRunAt e lastRunStatus — é o estado de cada fonte
+- **Dados Flow** (`dados-flow`) · `flow_project_data_list_connections` — lista as conexões do projeto com categoria, plataforma, accountId, active, queryable, lastRunAt e lastRunStatus — é o estado de cada fonte
   Parâmetros: `{projectDocumentId}`
   - conexão com `queryable` ou `active` falso, ou `lastRunStatus` de falha, reprova o canal inteiro: registre a plataforma e o `lastRunAt` como último dia com dado.
   - no primeiro cliente o Google Ads estava falhando havia mais de dois meses e o Meta em dia; a planilha do cliente estava no inverso exato. É por isso que existe `fonte_por_canal`.
-- **dados-flow** · `flow_media_query` — último dia com custo por canal: `SELECT MAX(date_start) FROM <tabela de insights> WHERE account_id = '<id>'`
+- **Dados Flow** (`dados-flow`) · `flow_media_query` — último dia com custo por canal: `SELECT MAX(date_start) FROM <tabela de insights> WHERE account_id = '<id>'`
   Parâmetros: `{projectDocumentId, platform, sql}`
   - mesmas regras de SQL da etapa 03.
   - tolere um dia de atraso: plataforma de anúncio consolida em D-1.
-- **dados-flow** · `flow_crm_query` — último negócio criado e atualizado, quando o CRM do projeto está na plataforma
+- **Dados Flow** (`dados-flow`) · `flow_crm_query` — último negócio criado e atualizado, quando o CRM do projeto está na plataforma
   Parâmetros: `{projectDocumentId, sql}`
   - CRM fora da plataforma: a cobertura vem do adaptador direto (implementação de referência: extrair/crm_nectarcrm.py).
 
@@ -245,10 +278,10 @@ com os cuidados que já custaram número errado — eles entram no briefing da e
 
 **Ferramentas**
 
-- **dados-flow** · `flow_media_list_tables` — descobre a tabela de insights da conexão — o nome muda por conta e por plataforma
+- **Dados Flow** (`dados-flow`) · `flow_media_list_tables` — descobre a tabela de insights da conexão — o nome muda por conta e por plataforma
   Parâmetros: `{projectDocumentId, platform}`
   - prefira o stream `adsinsights`, `insights`, `ad_performance_report` ou `campaign_insights`, nessa ordem, e use `qualifiedTable`.
-- **dados-flow** · `flow_media_query` — custo, impressões e cliques por dia, numa chamada só e exata
+- **Dados Flow** (`dados-flow`) · `flow_media_query` — custo, impressões e cliques por dia, numa chamada só e exata
   Parâmetros: `{projectDocumentId, platform, sql}`
   ```sql
   SELECT date_start AS dia, ROUND(SUM(CAST(spend AS FLOAT64)),2) AS investimento, SUM(CAST(impressions AS INT64)) AS impressoes, SUM(CAST(clicks AS INT64)) AS cliques FROM <tabela> WHERE account_id = '<id sem act_>' AND date_start >= '<de>' AND date_start <= '<ate>' GROUP BY dia ORDER BY dia
@@ -257,12 +290,12 @@ com os cuidados que já custaram número errado — eles entram no briefing da e
   - `UNNEST` é bloqueado — por isso lead não sai por SQL.
   - `spend`, `impressions` e `clicks` chegam como texto: `CAST` antes de somar.
   - puxe também os doze meses anteriores: safra e série mensal precisam do histórico.
-- **dados-flow** · `flow_media_conversion_summary` — leads por dia — desempacota as ações (`lead` ou `onsite_conversion.lead_grouped`)
+- **Dados Flow** (`dados-flow`) · `flow_media_conversion_summary` — leads por dia — desempacota as ações (`lead` ou `onsite_conversion.lead_grouped`)
   Parâmetros: `{projectDocumentId, platform, period: {startGte, endLt}, pagination: {page, pageSize}}`
   - `endLt` é exclusivo: passe o dia seguinte ao fim do período.
   - devolve linha por anúncio e por dia, **no máximo 100 por página e sem metadado de paginação** — pedir 500 trunca em silêncio. Foi assim que uma leitura saiu quatro vezes menor que o custo real.
   - pagine de 100 em 100 com teto (12 páginas). Se bater no teto, **descarte a contagem de lead e avise**: subcontagem é pior que lacuna. Custo continua exato, pelo SQL.
-- **dados-flow** · `flow_crm_list_tables + flow_crm_query` — negócios (id, criação, fechamento, status, valor, funil, etapa, motivo de perda, contato, tags, origem) e contatos (id, criação, origem, canal), quando o CRM está na plataforma
+- **Dados Flow** (`dados-flow`) · `flow_crm_list_tables + flow_crm_query` — negócios (id, criação, fechamento, status, valor, funil, etapa, motivo de perda, contato, tags, origem) e contatos (id, criação, origem, canal), quando o CRM está na plataforma
   Parâmetros: `{projectDocumentId} para listar; {projectDocumentId, sql} para consultar`
   - sem conexão de CRM, a base vem do adaptador direto do CRM. Pegadinhas do primeiro CRM real estão no topo de extrair/crm_nectarcrm.py: filtro de status é obrigatório, o filtro de data da API não filtra, e "Ganha" em funil de qualificação não é venda.
 
@@ -323,14 +356,12 @@ com os cuidados que já custaram número errado — eles entram no briefing da e
 
 **Ferramentas**
 
-- **bigquery-calls** · `consultar_calls_por_tipo` — as calls do projeto no período, com trecho de transcrição
+- **BigQuery · Ligações** (`bigquery-calls`) · `consultar_calls_por_tipo` — as calls do projeto no período, com trecho de transcrição
   Parâmetros: `{project_document_id, start_date, end_date, mode: "list", limit: "50", include_transcription_excerpt: "true", demais filtros como string vazia}`
   - todos os parâmetros são string, inclusive `limit` e os booleanos.
   - `transcription_excerpt` é um trecho; para a transcrição inteira, confirmar a ferramenta.
   - no primeiro cliente voltou vazio no período — confirmar onde as calls daquele projeto ficam registradas. Sem call, as três listas saem vazias e o bloco diz que não houve.
   - esta etapa é do catálogo: se o template não buscar a transcrição sozinho, a busca entra como etapa de dados antes dela.
-- **bigquery-calls** · `localize_project` — acha o projectDocumentId pelo nome do cliente
-  Parâmetros: `{search_text}`
 
 ## 06 · Varredura do grupo de WhatsApp
 
@@ -347,7 +378,7 @@ com os cuidados que já custaram número errado — eles entram no briefing da e
 
 **Ferramentas**
 
-- **bigquery-whatsapp** · `whatsapp_resumir_grupos_queryon` — resumo do grupo no período: `latest_resumo`, `latest_status_risco`, `last_created_at`
+- **BigQuery · WhatsApp** (`bigquery-whatsapp`) · `whatsapp_resumir_grupos_queryon` — resumo do grupo no período: `latest_resumo`, `latest_status_risco`, `last_created_at`
   Parâmetros: `{id_group, start_date, end_date, mode: "list", limit: "50", client_documentid: "", search_name: ""}`
   - parâmetros são string.
   - os campos de resumo podem vir vazios com o grupo ativo — no primeiro cliente vieram. Isso é aviso de operação (vira risco no bloco P), não é zero pendência.
@@ -367,7 +398,7 @@ com os cuidados que já custaram número errado — eles entram no briefing da e
 
 **Ferramentas**
 
-- **ekyte** · a confirmar — entregas realizadas, previstas e horas do projeto
+- **eKyte** (`ekyte`) · a confirmar — entregas realizadas, previstas e horas do projeto
   Parâmetros: `a confirmar`
   - o servidor veio sem credencial na configuração recebida. Até ligar, as entregas entram pela entrada `entregas_do_periodo` do workflow, e a etapa diz de onde vieram.
 
@@ -383,7 +414,7 @@ com os cuidados que já custaram número errado — eles entram no briefing da e
 
 **Ferramentas**
 
-- **cockpit** · `cockpit_list_projects` — cadastro do projeto (filtro por `filtersJson`): datas, status, contrato
+- **Cockpit Colli** (`cockpit`) · `cockpit_list_projects` — cadastro do projeto (filtro por `filtersJson`): datas, status, contrato
   Parâmetros: `{filtersJson}`
   - as ferramentas de health score, NPS e churn do cockpit não foram confirmadas; a implementação de referência não as chama. Sem elas, a etapa diz que não há sinal — não inventa health.
 
@@ -423,7 +454,7 @@ com os cuidados que já custaram número errado — eles entram no briefing da e
 
 **Ferramentas**
 
-- **dados-flow** · `flow_goals_list` — metas cadastradas do período, com `target`, `actual`, `attainment` e `pace`
+- **Dados Flow** (`dados-flow`) · `flow_goals_list` — metas cadastradas do período, com `target`, `actual`, `attainment` e `pace`
   Parâmetros: `{subjectRef: <projectDocumentId>, subjectType: "project", periodKey: "YYYY-MM", granularity: "monthly"}`
   - `granularity` é `monthly`, não `month`.
   - sem item, o projeto está sem meta cadastrada no período: use os OKRs das premissas e **diga que a meta não está no sistema** — cadastrar vira próximo passo.
@@ -518,7 +549,7 @@ com os cuidados que já custaram número errado — eles entram no briefing da e
 
 **Ferramentas**
 
-- **plataforma** · a confirmar — entregar o pacote aprovado à etapa 16 (`checkin-colli`) e gravar o documento de revisão
+- **V4 OS** (`v4os`) · a confirmar — entregar o pacote aprovado à etapa 16 (`checkin-colli`) e gravar o documento de revisão
   Parâmetros: `o pacote de referencias/checkin.exemplo.json`
   - como uma etapa aciona outra skill no V4OS está em aberto — é a pendência que decide se o handoff é automático ou manual.
 
@@ -555,7 +586,7 @@ com os cuidados que já custaram número errado — eles entram no briefing da e
 
 **Ferramentas**
 
-- **account-checkin-ropre-v2** · internas da skill — compilar as páginas com os tokens do design system
+- `account-checkin-ropre-v2` · internas da skill — compilar as páginas com os tokens do design system
   Parâmetros: `conteúdo do deck (16)`
 
 ## 18 · QA visual
@@ -574,7 +605,7 @@ com os cuidados que já custaram número errado — eles entram no briefing da e
 
 **Ferramentas**
 
-- **account-checkin-ropre-v2** · internas da skill — QA visual e as duas conferências de conteúdo
+- `account-checkin-ropre-v2` · internas da skill — QA visual e as duas conferências de conteúdo
   Parâmetros: `deck compilado (17) e check-in aprovado (15)`
 
 ## 19 · Publicar e entregar
@@ -593,7 +624,7 @@ com os cuidados que já custaram número errado — eles entram no briefing da e
 
 **Ferramentas**
 
-- **account-checkin-ropre-v2** · internas da skill — publicar o deck e guardar o documento
+- `account-checkin-ropre-v2` · internas da skill — publicar o deck e guardar o documento
   Parâmetros: `deck aprovado (18) e documento (15)`
 
 ---
@@ -636,9 +667,11 @@ ambígua.
 | schema de export do Studio | para o mapeamento deste JSON ser mecânico em vez de manual | V4OS |
 | catálogo completo de etapas | 06, 07 e 08 podem ter template pronto; só `Resumo de call → briefing` foi reusada | V4OS |
 | como uma etapa declara a ferramenta MCP que chama | vale para toda etapa marcada 🔧 | V4OS |
+| ferramentas do V4 OS (contexto do projeto) | para a etapa 01 pegar o projeto do contexto em vez do formulário, e para a 15 acionar a próxima skill | V4OS |
 | como uma etapa aciona outra skill | é a passagem 15 → 16 | V4OS |
 | contrato de entrada de `checkin-colli` e de `account-checkin-ropre-v2` | até saber o formato que elas esperam, o check-in entrega no de referencias/checkin.exemplo.json | dono das skills |
-| servidor e credencial do ekyte | a etapa 07 está sem fonte; enquanto isso, entregas entram pela entrada `entregas_do_periodo` | V4OS |
+| ferramentas do eKyte | o servidor existe e está ligado no V4OS; faltam os nomes das ferramentas de entregas e horas para a etapa 07 — até lá, entram pela entrada `entregas_do_periodo` | V4OS |
 | ferramentas de health score, NPS e churn do cockpit | etapa 08; só `cockpit_list_projects` é conhecida | V4OS |
 | onde as calls do projeto ficam registradas | `consultar_calls_por_tipo` voltou vazio no primeiro cliente | V4OS |
 | produto do workflow | cabeçalho está como *a confirmar* | quem publica |
+| token pessoal do Flow de quem roda | Dados Flow e Catálogo de Produtos usam o token pessoal e vêm desligados no chat; sem ele, 02, 03 e 10 não respondem | quem roda |
