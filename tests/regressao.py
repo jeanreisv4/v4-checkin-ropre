@@ -15,7 +15,9 @@ Confere as regras que não podem quebrar sem alguém notar:
   7. OKR compara com o comparador declarado (>= e <=);
   8. pendência de conversa e acordo de call chegam aos blocos de Entregas e Próximos Passos;
   9. documento e deck saem sem erro, com os cinco blocos do ROPRE;
- 10. delega para tests/regressao_cliente.py, quando existir: a regressão contra um cliente real,
+ 10. o JSON do workflow valida (etapa 🔧 nomeia ferramenta, leis por etapa, conexões íntegras)
+     e o exemplo de handoff é sintético;
+ 11. delega para tests/regressao_cliente.py, quando existir: a regressão contra um cliente real,
      com um mês fechado e os números conferidos à mão (o arquivo fica fora do repositório).
 """
 import json
@@ -124,6 +126,26 @@ def main():
                  len(prs.slides._sldIdLst))
         for bloco in ("Resultados", "Objetivos", "Premissas e Riscos", "Entregas", "Próximos Passos"):
             conferir(bloco in textos, f"deck traz o bloco {bloco}")
+
+    print("\nWorkflow (o JSON que o V4OS lê)")
+    sys.path.insert(0, os.path.join(SKILL, "workflow"))
+    import render_spec  # noqa: E402
+    wf = json.load(open(render_spec.FONTE, encoding="utf-8"))["workflow"]
+    problemas = render_spec.validar(wf)
+    conferir(not problemas, "JSON do workflow válido para import", "; ".join(problemas))
+    com_ferramenta = [e["id"] for e in wf["etapas"] if e["chama_ferramenta"]]
+    conferir(all(e["ferramentas"] for e in wf["etapas"] if e["chama_ferramenta"]),
+             f"toda etapa 🔧 nomeia a ferramenta ({', '.join(com_ferramenta)})")
+    conferir(all(e["leis_aplicaveis"] for e in wf["etapas"] if e["id"] in ("04", "09", "14")),
+             "cálculo, bloco R e conferência carregam leis no briefing")
+    conferir(os.path.exists(render_spec.EXEMPLO), "contrato de handoff de exemplo existe")
+    if os.path.exists(render_spec.EXEMPLO):
+        ex = json.load(open(render_spec.EXEMPLO, encoding="utf-8"))
+        conferir(all(k in ex for k in ("resultados", "objetivos", "premissas_riscos", "entregas",
+                                       "proximos_passos", "regra_atribuicao", "avisos")),
+                 "exemplo traz os cinco blocos, a regra e os avisos")
+        conferir("Cliente Teste" in json.dumps(ex) and "Nord" not in json.dumps(ex),
+                 "exemplo é sintético, sem dado de cliente")
 
     print("\nCliente real")
     caminho_cliente = os.path.join(SKILL, "tests", "regressao_cliente.py")

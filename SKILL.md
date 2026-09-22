@@ -5,7 +5,7 @@ description: Monta o check-in de cliente no modelo ROPRE (Resultados, Objetivos,
 
 # Check-in ROPRE
 
-**Versão 1.0 (22/09/2026).** Histórico em `CHANGELOG.md`. Caminhos relativos à pasta da skill
+**Versão 1.4 (22/09/2026).** Histórico em `CHANGELOG.md`. Caminhos relativos à pasta da skill
 (`.claude/skills/checkin-ropre/`).
 
 O check-in é um ETL, não um relatório escrito à mão:
@@ -126,6 +126,11 @@ trabalho. `design-system-pro` só entra se o design system for criado ou refeito
 Dois conteúdos são requisito de layout e não podem ser podados pela diagramação: a **regra de
 atribuição escrita por extenso** no bloco de Resultados e a página final de **fontes e o que não foi
 medido**.
+
+O que se entrega é o `checkin.json` — um exemplo sem dado de cliente está em
+`referencias/checkin.exemplo.json`, e é esse o contrato até as skills de deck dizerem o formato que
+esperam. Dentro do V4OS, o workflow inteiro está em `workflow/checkin-ropre.workflow.json`, com as
+ferramentas MCP de cada etapa e as instruções de import; a spec legível é `referencias/workflow_v4os.md`.
 
 - **Deck fora da plataforma:** o `.pptx` daqui é fallback. Suba no Drive do cliente e o Google Slides
   converte; o tema da marca se aplica depois.

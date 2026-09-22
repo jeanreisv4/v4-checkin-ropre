@@ -23,7 +23,7 @@ Este repositório resolve isso de duas formas, e as duas usam as mesmas definiç
 Este é o desenho. O arquivo que se importa é
 [`workflow/checkin-ropre.workflow.json`](workflow/checkin-ropre.workflow.json); a especificação
 completa, com o briefing de cada etapa, está em
-[`referencias/workflow_v4s.md`](referencias/workflow_v4s.md). Os dois saem do mesmo JSON, então não
+[`referencias/workflow_v4os.md`](referencias/workflow_v4os.md). Os dois saem do mesmo JSON, então não
 divergem.
 
 <!-- diagrama:inicio -->
@@ -122,27 +122,27 @@ uma: número não se recalcula na diagramação, "não medido" não vira travess
 espaço, e o QA visual confere também **conteúdo** — todo número do deck existe no check-in aprovado.
 
 <!-- etapas:inicio -->
-| # | Etapa | Categoria | Executada por | Chama ferramenta |
-| --- | --- | --- | --- | --- |
-| 01 | Abrir o período e as premissas | Briefing | este workflow | — |
-| 02 | Conferir a cobertura das fontes | Dados | este workflow | sim |
-| 03 | Puxar a base do período | Dados | este workflow | sim |
-| 04 | Calcular os indicadores do período | Análise | este workflow | — |
-| 05 | Resumo de call → briefing | Briefing | este workflow · catálogo `Resumo de call → briefing` | — |
-| 06 | Varredura do grupo de WhatsApp | Pesquisa | este workflow | sim |
-| 07 | Entregas e horas | Dados | este workflow | sim |
-| 08 | Sinais do cockpit | Pesquisa | este workflow | sim |
-| 09 | R · Resultados | Análise | este workflow | — |
-| 10 | O · Objetivos | Análise | este workflow | sim |
-| 11 | P · Premissas e Riscos | Análise | este workflow | — |
-| 12 | E · Entregas | Análise | este workflow | — |
-| 13 | E · Próximos Passos | Análise | este workflow | — |
-| 14 | Conferência dos números | Revisão | este workflow | — |
-| 15 | Entregar para o deck do design system | Entrega | este workflow | sim |
-| 16 | Preparar o conteúdo para o deck | Entrega | `checkin-colli` | — |
-| 17 | Compilar as páginas no design system | Entrega | `account-checkin-ropre-v2` | sim |
-| 18 | QA visual | Revisão | `account-checkin-ropre-v2` | sim |
-| 19 | Publicar e entregar | Entrega | `account-checkin-ropre-v2` | sim |
+| # | Etapa | Categoria | Executada por | Leis | Chama ferramenta |
+| --- | --- | --- | --- | --- | --- |
+| 01 | Abrir o período e as premissas | Briefing | este workflow | 2 | — |
+| 02 | Conferir a cobertura das fontes | Dados | este workflow | 1 | sim |
+| 03 | Puxar a base do período | Dados | este workflow | 1, 2 | sim |
+| 04 | Calcular os indicadores do período | Análise | este workflow | 1, 2, 3 | — |
+| 05 | Resumo de call → briefing | Briefing | este workflow · catálogo `Resumo de call → briefing` | — | — |
+| 06 | Varredura do grupo de WhatsApp | Pesquisa | este workflow | — | sim |
+| 07 | Entregas e horas | Dados | este workflow | 3 | sim |
+| 08 | Sinais do cockpit | Pesquisa | este workflow | — | sim |
+| 09 | R · Resultados | Análise | este workflow | 2, 3, 4 | — |
+| 10 | O · Objetivos | Análise | este workflow | 3, 4 | sim |
+| 11 | P · Premissas e Riscos | Análise | este workflow | 3, 4 | — |
+| 12 | E · Entregas | Análise | este workflow | 3, 4 | — |
+| 13 | E · Próximos Passos | Análise | este workflow | 4 | — |
+| 14 | Conferência dos números | Revisão | este workflow | 1, 2, 3, 4 | — |
+| 15 | Entregar para o deck do design system | Entrega | este workflow | 3, 4 | sim |
+| 16 | Preparar o conteúdo para o deck | Entrega | `checkin-colli` | 3, 4 | — |
+| 17 | Compilar as páginas no design system | Entrega | `account-checkin-ropre-v2` | 4 | sim |
+| 18 | QA visual | Revisão | `account-checkin-ropre-v2` | 3, 4 | sim |
+| 19 | Publicar e entregar | Entrega | `account-checkin-ropre-v2` | 4 | sim |
 <!-- etapas:fim -->
 
 ### As leis que viajam em cada briefing
@@ -166,6 +166,80 @@ atualizar semanas antes, então o mês ficou com a receita inteira e só uma fra
 Modelo nenhum pega isso lendo o resultado — o número parece ótimo. Pega-se **antes**, conferindo até
 que dia cada fonte tem dado. Daí a etapa de cobertura vir antes do cálculo, e o indicador que depende
 de fonte furada sair como "não medido", com o motivo e o último dia com dado.
+
+### Como levar para o V4OS
+
+O JSON deste repositório é a **especificação neutra** do workflow, não o export do Studio. Quem
+constrói lá dentro — o harness ou uma pessoa — cria uma etapa por item de `etapas` e uma conexão por
+item de `conexoes`, assim:
+
+<!-- import:inicio -->
+1. Declare `entradas_do_workflow` como o formulário do workflow. A etapa 01 as consome; nada é perguntado ao usuário depois.
+2. O briefing de cada etapa é `briefing` **precedido do texto das leis** listadas em `leis_aplicaveis` (índices em `leis`, a partir de 1). Regra escrita fora do briefing não chega ao agente que executa a etapa.
+3. Para cada etapa com `chama_ferramenta`, ligue as ferramentas de `ferramentas` (servidor e nome). Os `cuidados` de cada ferramenta entram no briefing da etapa — são as pegadinhas que já custaram número errado.
+4. Etapa com `origem: catalogo` usa o template do catálogo em `etapa_do_catalogo`; o `briefing` é o complemento ao template.
+5. Etapa com `origem: outra_skill` não é criada aqui: é a etapa correspondente da skill em `executado_por`, e o `briefing` é o contrato que o check-in cobra dela.
+6. Ligue as `conexoes` (de → para). Etapas com o mesmo antecessor correm em paralelo.
+7. Antes de publicar, rode num período já fechado e compare com a implementação de referência, número a número (seção *Como validar*).
+<!-- import:fim -->
+
+**As entradas do workflow.** O que se preenche para rodar. A regra de atribuição, os funis, a margem
+e o fee não moram em sistema nenhum da plataforma, por isso entram como input, e não como pergunta
+no meio do caminho.
+
+<!-- entradas:inicio -->
+| Entrada | Tipo | Obrigatória | O que é |
+| --- | --- | --- | --- |
+| `projeto` | texto | sim | o projectDocumentId do projeto na plataforma, ou o nome do cliente — a etapa 01 resolve o id com localize_project (BigQuery de calls) ou cockpit_list_projects. Um cliente pode ter mais de um projeto (assessoria e produto adicional são contratos separados); cada projeto é um check-in. |
+| `cadencia` | `quinzenal` · `mensal` · `quarter` | sim | define o corte do período e a profundidade dos blocos (ver referencias/ropre.md). |
+| `referencia` | data YYYY-MM-DD | sim | qualquer dia dentro do período; a etapa 01 resolve início e fim, e marca como parcial se o período ainda não terminou. |
+| `premissas_do_projeto` | objeto | sim | o que não mora em sistema nenhum da plataforma e por isso entra como input: fee, verba de mídia bruta e imposto, margem de contribuição (com origem e data), funis de venda, funil de recorrência, a regra de atribuição (tags, origens da agência, origens de mídia paga, origens em aberto, e a data em que foi fechada), os OKRs do ciclo (kr, métrica, meta, comparador), os riscos cadastrados (causa, risco, efeito, probabilidade, impacto) e, se o cliente lança à mão, o lançamento manual por mês. Molde: clientes/exemplo/cliente.json. |
+| `fonte_por_canal` | objeto | não | dono de cada canal de mídia quando o mesmo canal existe em duas fontes (ex.: meta na plataforma, google numa planilha porque a conexão quebrou). Sem isso, tudo vem da plataforma e nada é contado duas vezes. |
+| `grupo_de_whatsapp` | texto | não | id do grupo do cliente no BigQuery de WhatsApp. Sem ele, a etapa 06 diz que não há grupo ligado. |
+| `entregas_do_periodo` | objeto | não | realizadas (com evidência), previstas (com dono e prazo) e horas, enquanto a fonte de entregas (ekyte) não estiver ligada. Molde: clientes/exemplo/entradas/entregas.json. |
+<!-- entradas:fim -->
+
+**As ferramentas, por etapa.** Cada etapa marcada 🔧 diz no JSON qual servidor e qual ferramenta
+chama, com os parâmetros e os cuidados que já custaram número errado — o `endLt` exclusivo, a
+paginação de 100 sem metadado, o `account_id` sem `act_`, o `granularity: monthly`. Esses cuidados
+entram no briefing da etapa. A tabela resume; a
+[especificação](referencias/workflow_v4os.md) traz parâmetros e cuidados por extenso.
+
+<!-- ferramentas:inicio -->
+| Etapa | Servidor | Ferramenta | Para quê |
+| --- | --- | --- | --- |
+| 02 | **dados-flow** | `flow_project_data_list_connections` | lista as conexões do projeto com categoria, plataforma, accountId, active, queryable, lastRunAt e lastRunStatus — é o estado de cada fonte |
+| 02 | **dados-flow** | `flow_media_query` | último dia com custo por canal: `SELECT MAX(date_start) FROM <tabela de insights> WHERE account_id = '<id>'` |
+| 02 | **dados-flow** | `flow_crm_query` | último negócio criado e atualizado, quando o CRM do projeto está na plataforma |
+| 03 | **dados-flow** | `flow_media_list_tables` | descobre a tabela de insights da conexão — o nome muda por conta e por plataforma |
+| 03 | **dados-flow** | `flow_media_query` | custo, impressões e cliques por dia, numa chamada só e exata |
+| 03 | **dados-flow** | `flow_media_conversion_summary` | leads por dia — desempacota as ações (`lead` ou `onsite_conversion.lead_grouped`) |
+| 03 | **dados-flow** | `flow_crm_list_tables + flow_crm_query` | negócios (id, criação, fechamento, status, valor, funil, etapa, motivo de perda, contato, tags, origem) e contatos (id, criação, origem, canal), quando o CRM está na plataforma |
+| 05 | **bigquery-calls** | `consultar_calls_por_tipo` | as calls do projeto no período, com trecho de transcrição |
+| 05 | **bigquery-calls** | `localize_project` | acha o projectDocumentId pelo nome do cliente |
+| 06 | **bigquery-whatsapp** | `whatsapp_resumir_grupos_queryon` | resumo do grupo no período: `latest_resumo`, `latest_status_risco`, `last_created_at` |
+| 07 | **ekyte** | a confirmar | entregas realizadas, previstas e horas do projeto |
+| 08 | **cockpit** | `cockpit_list_projects` | cadastro do projeto (filtro por `filtersJson`): datas, status, contrato |
+| 10 | **dados-flow** | `flow_goals_list` | metas cadastradas do período, com `target`, `actual`, `attainment` e `pace` |
+| 15 | **plataforma** | a confirmar | entregar o pacote aprovado à etapa 16 (`checkin-colli`) e gravar o documento de revisão |
+<!-- ferramentas:fim -->
+
+**O que só quem está dentro da plataforma responde.** O repositório vai até onde dá para ir de fora.
+Estes pontos ficaram declarados no JSON como pendência, e cada um tem um fallback escrito na etapa:
+
+<!-- pendencias:inicio -->
+| O que falta | Por quê | Quem responde |
+| --- | --- | --- |
+| schema de export do Studio | para o mapeamento deste JSON ser mecânico em vez de manual | V4OS |
+| catálogo completo de etapas | 06, 07 e 08 podem ter template pronto; só `Resumo de call → briefing` foi reusada | V4OS |
+| como uma etapa declara a ferramenta MCP que chama | vale para toda etapa marcada 🔧 | V4OS |
+| como uma etapa aciona outra skill | é a passagem 15 → 16 | V4OS |
+| contrato de entrada de `checkin-colli` e de `account-checkin-ropre-v2` | até saber o formato que elas esperam, o check-in entrega no de referencias/checkin.exemplo.json | dono das skills |
+| servidor e credencial do ekyte | a etapa 07 está sem fonte; enquanto isso, entregas entram pela entrada `entregas_do_periodo` | V4OS |
+| ferramentas de health score, NPS e churn do cockpit | etapa 08; só `cockpit_list_projects` é conhecida | V4OS |
+| onde as calls do projeto ficam registradas | `consultar_calls_por_tipo` voltou vazio no primeiro cliente | V4OS |
+| produto do workflow | cabeçalho está como *a confirmar* | quem publica |
+<!-- pendencias:fim -->
 
 ---
 
@@ -282,9 +356,14 @@ ela** em vez de desenhar slide.
 
 | Skill | Papel | Relação com este workflow |
 | --- | --- | --- |
-| `account-checkin-ropre-v2` | renderiza o deck no design system | recebe o check-in aprovado da etapa 14 |
+| `account-checkin-ropre-v2` | renderiza o deck no design system | recebe o check-in aprovado da etapa 15, pela 16 |
 | `checkin-colli` | prepara o conteúdo antes do deck | sobrepõe em parte os blocos 09 a 13; a divisão precisa ser confirmada |
 | `design-system-pro` | criar ou refazer o design system no Figma | fora do escopo do check-in |
+
+O que a etapa 15 entrega tem forma conhecida: é o `checkin.json` da implementação de referência, e um
+exemplo real dele — gerado de dado sintético, sem cliente — está em
+[`referencias/checkin.exemplo.json`](referencias/checkin.exemplo.json). Até as duas skills dizerem
+que formato esperam, é esse o contrato.
 
 Duas coisas não podem ser podadas pela diagramação, e isso vale como requisito para qualquer layout:
 a **regra de atribuição escrita por extenso** no bloco de Resultados, e a página final de **fontes e

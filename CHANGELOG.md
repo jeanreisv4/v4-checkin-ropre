@@ -3,6 +3,37 @@
 Cada versão muda o que o cliente vê no check-in. Antes de publicar uma versão nova, rode
 `python3 tests/regressao.py`.
 
+## v1.4 · 22/09/2026 · O JSON passa a bastar para quem constrói dentro do V4OS
+
+Revisão feita do lugar de quem recebe o repositório lá dentro e precisa montar o workflow sem
+perguntar nada. O que faltava estava todo no Python, não no JSON.
+
+- **Cada etapa que chama ferramenta diz qual.** Campo `ferramentas` por etapa, com servidor, nome,
+  parâmetros e os cuidados que já custaram número errado: `account_id` sem `act_` e com aspas
+  simples, `UNNEST` bloqueado, paginação de 100 sem metadado (descartar a contagem se bater no
+  teto), `endLt` exclusivo, `granularity: monthly`, parâmetros de calls e WhatsApp como string.
+  Antes, isso só existia dentro de `extrair/flow_mcp.py`.
+- **As leis viajam com a etapa.** `leis_aplicaveis` em cada etapa e a instrução de import de
+  prefixar o briefing com elas — o README já dizia que regra fora do briefing não chega ao agente,
+  e o JSON fazia o contrário.
+- **Entradas e saídas do workflow declaradas** (`entradas_do_workflow`, `saidas_do_workflow`): o
+  que não mora em sistema nenhum da plataforma — regra de atribuição, funis, margem, fee, OKRs —
+  entra como formulário, não como pergunta no meio do caminho.
+- **O contrato de handoff tem um exemplo real.** `referencias/checkin.exemplo.json`, gerado da
+  fixture sintética pelo `render_spec.py`, é o que a etapa 15 entrega à 16 até as skills de deck
+  dizerem o formato que esperam.
+- **Instruções de import e pendências no próprio JSON** (`instrucoes_de_import`): o arquivo é a
+  especificação neutra, não o export do Studio; sete passos para o harness materializar, e a lista
+  do que só quem está dentro da plataforma responde — cada pendência com o fallback escrito na etapa
+  (ekyte sem credencial → entregas entram à mão; cockpit sem ferramenta de health → a etapa diz que
+  não há sinal; calls vazias → o bloco diz que não houve).
+- **`render_spec.py` valida o JSON** antes de gerar: etapa que chama ferramenta sem nomeá-la,
+  conexão para etapa inexistente, lei fora do intervalo e etapa solta param a geração. A regressão
+  roda a mesma validação.
+- Ajustes: a etapa 03 puxa do `dados-flow` (o Nekt é quem alimenta, não quem responde); a integração
+  com `account-checkin-ropre-v2` recebe da etapa 15 pela 16, não da 14; a versão no `SKILL.md`
+  acompanha o changelog.
+
 ## v1.3 · 22/09/2026 · A fronteira com o design system, e o grafo até o deck publicado
 
 - **A etapa 15 deixa de desenhar slide.** Dentro da plataforma, o deck é renderizado pela skill de
@@ -30,7 +61,7 @@ Cada versão muda o que o cliente vê no check-in. Antes de publicar uma versão
   agentes: 15 etapas com briefing, entradas, saídas e a marca de quem chama ferramenta, mais as 23
   conexões e as quatro leis. É este arquivo que se importa na plataforma.
 - **`workflow/render_spec.py` gera a documentação a partir dele** — a especificação completa em
-  `referencias/workflow_v4s.md`, o diagrama mermaid e os blocos do README. Documentação e arquivo de
+  `referencias/workflow_v4os.md`, o diagrama mermaid e os blocos do README. Documentação e arquivo de
   import não podem divergir porque não são escritos duas vezes.
 - **README reescrito em torno do workflow**: o desenho em diagrama, a tabela das etapas, as leis, e o
   motivo de a etapa de cobertura vir antes do cálculo. A implementação em Python passa a ser
