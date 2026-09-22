@@ -3,6 +3,19 @@
 Cada versão muda o que o cliente vê no check-in. Antes de publicar uma versão nova, rode
 `python3 tests/regressao.py`.
 
+## v1.3 · 22/09/2026 · A fronteira com o design system
+
+- **A etapa 15 deixa de desenhar slide.** Dentro da plataforma, o deck é renderizado pela skill de
+  design system da companhia (`account-checkin-ropre-v2`), que já tem tokens, layouts de 1600×900,
+  storytelling de performance e QA visual. A etapa passa a **entregar o check-in aprovado** para ela.
+- **As integrações ficaram declaradas no JSON do workflow** (`integracoes_da_plataforma`), com papel,
+  relação e o contrato de entrada de cada uma — os marcados como *a confirmar* são o que falta para o
+  encaixe ser automático. `checkin-colli` sobrepõe em parte os blocos 09 a 13 e a divisão precisa ser
+  fechada para não haver etapa duplicada.
+- **Dois conteúdos viraram requisito de layout**, e não preferência: a regra de atribuição escrita por
+  extenso no bloco de Resultados e a página final de fontes e do que não foi medido.
+- O renderizador `.pptx` continua como **fallback para fora da plataforma**.
+
 ## v1.2 · 22/09/2026 · O workflow vira arquivo, e o arquivo vira a documentação
 
 - **`workflow/checkin-ropre.workflow.json` é a fonte da verdade** do check-in como workflow de

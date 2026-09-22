@@ -41,7 +41,7 @@ flowchart TD
     E12["<b>12</b> E · Entregas"]
     E13["<b>13</b> E · Próximos Passos"]
     E14["<b>14</b> Conferência dos<br/>números"]
-    E15["<b>15</b> Gerar deck e documento 🔧"]
+    E15["<b>15</b> Entregar para o deck<br/>do design system 🔧"]
 
     E01 --> E02
     E01 --> E05
@@ -328,15 +328,46 @@ modelo, a regra precisa viajar junto com a tarefa — o agente não pode depende
 > Divergência entre a recontagem e o pacote é erro de cálculo, não arredondamento: devolva os dois
 > números e pare. Check-in atrasado custa menos que check-in com número que não fecha.
 
-## 15 · Gerar deck e documento
+## 15 · Entregar para o deck do design system
 
 **Categoria:** Entrega · do zero · *chama ferramenta*
 **Entradas:** check-in aprovado (14)
-**Saídas:** deck e documento de revisão
+**Saídas:** check-in em formato de consumo para a skill de deck, documento de revisão
 
-> Gere as duas saídas do mesmo pacote. Deck na ordem capa → índice ROPRE → 01 Resultados →
-> 02 Objetivos → 03 Premissas e Riscos → 04 Entregas → 05 Próximos Passos → **Fontes e o que não foi
-> medido**. A última página não é opcional: é ela que permite defender o número linha por linha.
+> **Este workflow não desenha slide.** O deck é responsabilidade da skill de design system da
+> companhia (`account-checkin-ropre-v2`), que já tem os tokens visuais, os layouts de 1600×900, o
+> storytelling de performance e o QA visual. O que sai daqui é o conteúdo aprovado, pronto para ela
+> consumir.
+>
+> Entregue dois artefatos do mesmo pacote:
+>
+> 1. **o check-in aprovado**, com os cinco blocos, os números e a lista do que não foi medido, no
+>    formato que a skill de deck espera;
+> 2. **o documento de revisão**, para conferência antes da reunião e registro depois.
+>
+> Dois conteúdos são obrigatórios e não podem ser podados pela diagramação: a **regra de atribuição**
+> escrita por extenso no bloco de Resultados, e a página final de **fontes e o que não foi medido**.
+> Se o layout não tiver lugar para elas, o lugar tem de ser criado — são elas que permitem defender o
+> número linha por linha na reunião.
+>
+> Fora da plataforma, quando não há design system disponível, o renderizador local gera um .pptx na
+> mesma ordem de blocos. É fallback, não é o caminho principal.
+
+---
+
+## Onde este workflow encosta em outras skills
+
+O check-in produz **conteúdo com número defensável**. Diagramação, identidade visual e QA
+visual são de quem cuida do design system. A fronteira:
+
+| Skill | Papel | Relação com este workflow |
+| --- | --- | --- |
+| `account-checkin-ropre-v2` | renderiza o deck no design system da companhia — HTML 1600×900, tokens visuais, layouts de slide, storytelling de performance e QA visual | recebe o check-in aprovado (etapa 14) e produz o deck; este workflow não desenha slide |
+| `checkin-colli` | prepara o conteúdo antes do deck | sobrepõe em parte os blocos 09 a 13; confirmar a divisão para não haver etapa duplicada |
+| `design-system-pro` | criar ou refazer o design system no Figma | fora do escopo do check-in; entra só se o design system mudar |
+
+Os contratos de entrada marcados como *a confirmar* são o que falta para o encaixe ser
+automático em vez de manual.
 
 ---
 

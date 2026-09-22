@@ -117,11 +117,20 @@ Antes de mandar o deck, leia o `checkin.md` e confira três coisas:
 
 ## 5. Publicar
 
-- **Deck:** suba o `.pptx` no Drive do cliente; o Google Slides converte. Se o usuário quiser o
-  template visual da V4, aplique o tema depois da conversão — a skill entrega estrutura e números,
-  não o layout da marca.
-- **Documento:** o `checkin.md` vira documento vivo (artifact) quando o usuário quiser comentar e
-  revisar antes da reunião.
+**Dentro da plataforma, o deck não é seu.** Quem renderiza é a skill de design system
+(`account-checkin-ropre-v2`): ela tem os tokens, os layouts de 1600×900, o storytelling de
+performance e o QA visual. Entregue a ela o check-in aprovado e pare aí. `checkin-colli` prepara
+conteúdo para o deck e sobrepõe em parte os blocos 09 a 13 — confirme a divisão antes de duplicar
+trabalho. `design-system-pro` só entra se o design system for criado ou refeito.
+
+Dois conteúdos são requisito de layout e não podem ser podados pela diagramação: a **regra de
+atribuição escrita por extenso** no bloco de Resultados e a página final de **fontes e o que não foi
+medido**.
+
+- **Deck fora da plataforma:** o `.pptx` daqui é fallback. Suba no Drive do cliente e o Google Slides
+  converte; o tema da marca se aplica depois.
+- **Documento:** o `checkin.md` vira documento vivo quando o usuário quiser comentar e revisar antes
+  da reunião.
 
 ## 6. Testes
 

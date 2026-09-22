@@ -43,7 +43,7 @@ flowchart TD
     E12["<b>12</b> E · Entregas"]
     E13["<b>13</b> E · Próximos Passos"]
     E14["<b>14</b> Conferência dos<br/>números"]
-    E15["<b>15</b> Gerar deck e documento 🔧"]
+    E15["<b>15</b> Entregar para o deck<br/>do design system 🔧"]
 
     E01 --> E02
     E01 --> E05
@@ -115,7 +115,7 @@ O grafo tem quatro trechos, e a ordem entre eles não é estética:
 | 12 | E · Entregas | Análise | do zero | — |
 | 13 | E · Próximos Passos | Análise | do zero | — |
 | 14 | Conferência dos números | Revisão | do zero | — |
-| 15 | Gerar deck e documento | Entrega | do zero | sim |
+| 15 | Entregar para o deck do design system | Entrega | do zero | sim |
 <!-- etapas:fim -->
 
 ### As leis que viajam em cada briefing
@@ -242,6 +242,29 @@ python3 workflow/render_spec.py            # regenera documentação e diagrama 
 
 Saída em `saida/<cliente>/`: `checkin.json` (os números, para conferir), `checkin.md` (documento de
 revisão) e `checkin.pptx` (deck).
+
+---
+
+## O deck e o design system
+
+Este repositório produz **conteúdo com número defensável**. Diagramação, identidade visual e QA
+visual são de outra casa: dentro da plataforma, o deck é renderizado pela skill de design system da
+companhia (`account-checkin-ropre-v2`), que já tem os tokens, os layouts de 1600×900, o storytelling
+de performance e a conferência visual. A etapa 15 do workflow **entrega o check-in aprovado para
+ela** em vez de desenhar slide.
+
+| Skill | Papel | Relação com este workflow |
+| --- | --- | --- |
+| `account-checkin-ropre-v2` | renderiza o deck no design system | recebe o check-in aprovado da etapa 14 |
+| `checkin-colli` | prepara o conteúdo antes do deck | sobrepõe em parte os blocos 09 a 13; a divisão precisa ser confirmada |
+| `design-system-pro` | criar ou refazer o design system no Figma | fora do escopo do check-in |
+
+Duas coisas não podem ser podadas pela diagramação, e isso vale como requisito para qualquer layout:
+a **regra de atribuição escrita por extenso** no bloco de Resultados, e a página final de **fontes e
+o que não foi medido**. São elas que sustentam o número quando alguém pergunta de onde ele veio.
+
+O renderizador `.pptx` deste repositório continua existindo como **fallback para fora da
+plataforma** — onde não há design system, ele entrega a mesma sequência de blocos.
 
 ---
 

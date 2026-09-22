@@ -132,6 +132,27 @@ def spec(dados):
         p += ["> " + l if l.strip() else ">" for l in e["briefing"].splitlines()]
         p.append("")
 
+    if wf.get("integracoes_da_plataforma"):
+        p += [
+            "---",
+            "",
+            "## Onde este workflow encosta em outras skills",
+            "",
+            "O check-in produz **conteúdo com número defensável**. Diagramação, identidade visual e QA",
+            "visual são de quem cuida do design system. A fronteira:",
+            "",
+            "| Skill | Papel | Relação com este workflow |",
+            "| --- | --- | --- |",
+        ]
+        for i in wf["integracoes_da_plataforma"]:
+            p.append(f'| `{i["skill"]}` | {i["papel"]} | {i["relacao"]} |')
+        p += [
+            "",
+            "Os contratos de entrada marcados como *a confirmar* são o que falta para o encaixe ser",
+            "automático em vez de manual.",
+            "",
+        ]
+
     p += [
         "---",
         "",

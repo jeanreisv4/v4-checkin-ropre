@@ -264,7 +264,7 @@
       },
       {
         "id": "15",
-        "titulo": "Gerar deck e documento",
+        "titulo": "Entregar para o deck do design system",
         "categoria": "Entrega",
         "origem": "do_zero",
         "etapa_do_catalogo": null,
@@ -273,9 +273,10 @@
           "check-in aprovado (14)"
         ],
         "saidas": [
-          "deck e documento de revisão"
+          "check-in em formato de consumo para a skill de deck",
+          "documento de revisão"
         ],
-        "briefing": "Gere as duas saídas do mesmo pacote. Deck na ordem capa → índice ROPRE → 01 Resultados →\n02 Objetivos → 03 Premissas e Riscos → 04 Entregas → 05 Próximos Passos → **Fontes e o que não foi\nmedido**. A última página não é opcional: é ela que permite defender o número linha por linha."
+        "briefing": "**Este workflow não desenha slide.** O deck é responsabilidade da skill de design system da\ncompanhia (`account-checkin-ropre-v2`), que já tem os tokens visuais, os layouts de 1600×900, o\nstorytelling de performance e o QA visual. O que sai daqui é o conteúdo aprovado, pronto para ela\nconsumir.\n\nEntregue dois artefatos do mesmo pacote:\n\n1. **o check-in aprovado**, com os cinco blocos, os números e a lista do que não foi medido, no\n   formato que a skill de deck espera;\n2. **o documento de revisão**, para conferência antes da reunião e registro depois.\n\nDois conteúdos são obrigatórios e não podem ser podados pela diagramação: a **regra de atribuição**\nescrita por extenso no bloco de Resultados, e a página final de **fontes e o que não foi medido**.\nSe o layout não tiver lugar para elas, o lugar tem de ser criado — são elas que permitem defender o\nnúmero linha por linha na reunião.\n\nFora da plataforma, quando não há design system disponível, o renderizador local gera um .pptx na\nmesma ordem de blocos. É fallback, não é o caminho principal."
       }
     ],
     "conexoes": [
@@ -370,6 +371,26 @@
       {
         "de": "14",
         "para": "15"
+      }
+    ],
+    "integracoes_da_plataforma": [
+      {
+        "skill": "account-checkin-ropre-v2",
+        "papel": "renderiza o deck no design system da companhia — HTML 1600×900, tokens visuais, layouts de slide, storytelling de performance e QA visual",
+        "relacao": "recebe o check-in aprovado (etapa 14) e produz o deck; este workflow não desenha slide",
+        "contrato_de_entrada": "a confirmar — precisamos saber o formato que ela espera receber"
+      },
+      {
+        "skill": "checkin-colli",
+        "papel": "prepara o conteúdo antes do deck",
+        "relacao": "sobrepõe em parte os blocos 09 a 13; confirmar a divisão para não haver etapa duplicada",
+        "contrato_de_entrada": "a confirmar"
+      },
+      {
+        "skill": "design-system-pro",
+        "papel": "criar ou refazer o design system no Figma",
+        "relacao": "fora do escopo do check-in; entra só se o design system mudar",
+        "contrato_de_entrada": "não se aplica"
       }
     ]
   }
