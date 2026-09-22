@@ -3,6 +3,18 @@
 Cada versão muda o que o cliente vê no check-in. Antes de publicar uma versão nova, rode
 `python3 tests/regressao.py`.
 
+## v1.2 · 22/09/2026 · O workflow vira arquivo, e o arquivo vira a documentação
+
+- **`workflow/checkin-ropre.workflow.json` é a fonte da verdade** do check-in como workflow de
+  agentes: 15 etapas com briefing, entradas, saídas e a marca de quem chama ferramenta, mais as 23
+  conexões e as quatro leis. É este arquivo que se importa na plataforma.
+- **`workflow/render_spec.py` gera a documentação a partir dele** — a especificação completa em
+  `referencias/workflow_v4s.md`, o diagrama mermaid e os blocos do README. Documentação e arquivo de
+  import não podem divergir porque não são escritos duas vezes.
+- **README reescrito em torno do workflow**: o desenho em diagrama, a tabela das etapas, as leis, e o
+  motivo de a etapa de cobertura vir antes do cálculo. A implementação em Python passa a ser
+  apresentada como referência, não como o produto.
+
 ## v1.1 · 22/09/2026 · Flow ligado de verdade (MCP) e cobertura de fonte por canal
 
 - **`extrair/flow_mcp.py` substitui o adaptador REST hipotético.** Os servidores do Flow falam MCP

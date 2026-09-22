@@ -1,67 +1,217 @@
 # Check-in ROPRE
 
-**Do dado bruto do Flow ao check-in do cliente — em deck e documento, com a regra de atribuição
-declarada e o que não foi medido escrito na cara.**
+**O check-in de cliente como workflow de agentes: do dado bruto ao deck da reunião, com a regra de
+atribuição declarada e o que não foi medido escrito na cara.**
 
-Skill do [Claude Code](https://claude.com/claude-code). Roda sozinha no terminal também: é Python
-puro, com `python-pptx` só na hora de gerar o deck.
+Toda agência responde as mesmas cinco perguntas no check-in — **R**esultados, **O**bjetivos,
+**P**remissas e riscos, **E**ntregas, **E** próximos passos. Na prática, cada pessoa monta do seu
+jeito: número que sai de planilha lançada à mão, ROAS calculado sobre uma base que parou de
+atualizar semanas atrás, e uma reunião inteira discutindo por que a apresentação mostra mais venda
+que o CRM.
 
-## O problema
+Este repositório resolve isso de duas formas, e as duas usam as mesmas definições:
 
-Todo check-in de cliente responde as mesmas cinco perguntas — resultados, objetivos, premissas e
-riscos, entregas, próximos passos. Na prática, cada um monta do seu jeito: número que sai de uma
-planilha lançada à mão, ROAS calculado sobre uma base parada, e uma reunião inteira discutindo por
-que a apresentação mostra mais venda que o CRM.
+| | O que é | Para quê |
+| --- | --- | --- |
+| **O workflow** | 15 etapas encadeadas, cada uma com briefing, entradas e saídas | roda dentro da plataforma de workflows, onde os dados já chegam pelo pipeline |
+| **A implementação de referência** | ETL em Python, testado | confere se o workflow chegou ao número certo, e atende quem ainda não está na plataforma |
 
-Esta skill existe para que o check-in saia sempre do mesmo lugar, com as mesmas definições, e para
-que cada número possa ser defendido linha por linha.
+---
 
-## Como está montada
+## O workflow
+
+Este é o desenho. O arquivo que se importa é
+[`workflow/checkin-ropre.workflow.json`](workflow/checkin-ropre.workflow.json); a especificação
+completa, com o briefing de cada etapa, está em
+[`referencias/workflow_v4s.md`](referencias/workflow_v4s.md). Os dois saem do mesmo JSON, então não
+divergem.
+
+<!-- diagrama:inicio -->
+```mermaid
+flowchart TD
+    E01["<b>01</b> Abrir o período e as<br/>premissas"]
+    E02["<b>02</b> Conferir a cobertura<br/>das fontes 🔧"]
+    E03["<b>03</b> Puxar a base do<br/>período 🔧"]
+    E04["<b>04</b> Calcular os<br/>indicadores do período"]
+    E05["<b>05</b> Resumo de call →<br/>briefing"]
+    E06["<b>06</b> Varredura do grupo de<br/>WhatsApp 🔧"]
+    E07["<b>07</b> Entregas e horas 🔧"]
+    E08["<b>08</b> Sinais do cockpit 🔧"]
+    E09["<b>09</b> R · Resultados"]
+    E10["<b>10</b> O · Objetivos 🔧"]
+    E11["<b>11</b> P · Premissas e Riscos"]
+    E12["<b>12</b> E · Entregas"]
+    E13["<b>13</b> E · Próximos Passos"]
+    E14["<b>14</b> Conferência dos<br/>números"]
+    E15["<b>15</b> Gerar deck e documento 🔧"]
+
+    E01 --> E02
+    E01 --> E05
+    E01 --> E06
+    E01 --> E07
+    E01 --> E08
+    E02 --> E03
+    E03 --> E04
+    E04 --> E09
+    E04 --> E10
+    E04 --> E11
+    E05 --> E10
+    E05 --> E11
+    E05 --> E12
+    E05 --> E13
+    E06 --> E12
+    E07 --> E12
+    E08 --> E11
+    E09 --> E14
+    E10 --> E14
+    E11 --> E14
+    E12 --> E14
+    E13 --> E14
+    E14 --> E15
+
+    class E01,E05 briefing;
+    class E02,E03,E07 dados;
+    class E06,E08 pesquisa;
+    class E04,E09,E10,E11,E12,E13 analise;
+    class E14 revisao;
+    class E15 entrega;
+
+    classDef briefing fill:#1f2937,stroke:#60a5fa,color:#e5e7eb;
+    classDef dados fill:#1f2937,stroke:#34d399,color:#e5e7eb;
+    classDef pesquisa fill:#1f2937,stroke:#fbbf24,color:#e5e7eb;
+    classDef analise fill:#1f2937,stroke:#f87171,color:#e5e7eb;
+    classDef revisao fill:#1f2937,stroke:#a78bfa,color:#e5e7eb;
+    classDef entrega fill:#1f2937,stroke:#e5e7eb,color:#e5e7eb;
+```
+<!-- diagrama:fim -->
+
+🔧 = etapa que chama ferramenta durante a execução.
+
+O grafo tem quatro trechos, e a ordem entre eles não é estética:
+
+1. **Fundação (01 → 02 → 03 → 04).** Primeiro o período e as premissas. Depois — e este é o ponto —
+   a **cobertura das fontes**, antes de qualquer conta. Só então a base é puxada e os indicadores
+   calculados. Nenhum número nasce antes de a etapa 02 dizer que a fonte cobre o período.
+2. **Leitura em paralelo (05 a 08).** Call, WhatsApp, entregas e health score correm juntos, porque
+   nenhum depende do outro.
+3. **Os cinco blocos (09 a 13).** Cada um consome o que precisa e **nenhum recalcula nada**.
+4. **Fechamento (14 → 15).** A conferência reconta direto da base e bloqueia se não bater; só depois
+   saem o deck e o documento.
+
+<!-- etapas:inicio -->
+| # | Etapa | Categoria | Origem | Chama ferramenta |
+| --- | --- | --- | --- | --- |
+| 01 | Abrir o período e as premissas | Briefing | do zero | — |
+| 02 | Conferir a cobertura das fontes | Dados | do zero | sim |
+| 03 | Puxar a base do período | Dados | do zero | sim |
+| 04 | Calcular os indicadores do período | Análise | do zero | — |
+| 05 | Resumo de call → briefing | Briefing | catálogo · `Resumo de call → briefing` | — |
+| 06 | Varredura do grupo de WhatsApp | Pesquisa | do zero | sim |
+| 07 | Entregas e horas | Dados | do zero | sim |
+| 08 | Sinais do cockpit | Pesquisa | do zero | sim |
+| 09 | R · Resultados | Análise | do zero | — |
+| 10 | O · Objetivos | Análise | do zero | sim |
+| 11 | P · Premissas e Riscos | Análise | do zero | — |
+| 12 | E · Entregas | Análise | do zero | — |
+| 13 | E · Próximos Passos | Análise | do zero | — |
+| 14 | Conferência dos números | Revisão | do zero | — |
+| 15 | Gerar deck e documento | Entrega | do zero | sim |
+<!-- etapas:fim -->
+
+### As leis que viajam em cada briefing
+
+Com o cálculo acontecendo em etapa de modelo, regra escrita uma vez no topo não serve: ela precisa
+estar dentro da tarefa. Estas entram no briefing de toda etapa que toca número.
+
+<!-- leis:inicio -->
+1. **Cobertura antes de conta.** Nenhum indicador que dependa de uma fonte é calculado antes de a etapa 02 dizer que aquela fonte cobre o período inteiro. Fonte incompleta → o indicador sai **"não medido"**, com o motivo e o último dia com dado.
+2. **Definição é fixa, não é escolha.** Faturamento lê **data de fechamento**. Safra lê **data de criação**. Recorrente é o **funil de recorrência**, não o campo de venda base. Atribuição é a **regra declarada no projeto**, e ela aparece escrita no deck.
+3. **Lacuna é resposta.** Nunca preencher buraco com média, proporção, estimativa ou "mês anterior". Não medir e dar zero são coisas diferentes, e as duas são diferentes de "estável".
+4. **Número novo não nasce na escrita.** Todo valor citado nos blocos tem de existir na saída da etapa de cálculo. Quem escreve o bloco não recalcula nada.
+<!-- leis:fim -->
+
+### Por que a etapa 02 existe
+
+Na primeira execução real, o check-in devolveu **ROAS de 37 e taxa de entrada no CRM de 720%**. Os
+dois números estavam aritmeticamente corretos: a base de um dos canais de mídia tinha parado de
+atualizar semanas antes, então o mês ficou com a receita inteira e só uma fração do investimento.
+
+Modelo nenhum pega isso lendo o resultado — o número parece ótimo. Pega-se **antes**, conferindo até
+que dia cada fonte tem dado. Daí a etapa de cobertura vir antes do cálculo, e o indicador que depende
+de fonte furada sair como "não medido", com o motivo e o último dia com dado.
+
+---
+
+## A implementação de referência
+
+Mesmo desenho, em Python, para conferir número e para rodar fora da plataforma. É uma skill do
+[Claude Code](https://claude.com/claude-code) e funciona sozinha no terminal: Python puro, com
+`python-pptx` só na hora de gerar o deck.
 
 ```
 extrair/       E — um adaptador por fonte, todos devolvem o mesmo formato
-  flow_nect.py         Flow/NECT (CRM, mídia, chat) — dirigido por configuração
-  crm_nectarcrm.py     CRM direto (implementação de referência)
-  midia_planilha.py    mídia paga em planilha (Growth Pack e similares)
-  conversas_mcp.py     calls e WhatsApp lidos por MCP
-transformar/   T — modelo canônico e as métricas do período
-  canonico.py          o contrato entre extrair e carregar; períodos e validação
-  metricas.py          vendas, funil, mídia, break-even, safra, atribuição
-carregar/      L — os cinco blocos do ROPRE e os dois renderizadores
+  flow_mcp.py          plataforma de dados via MCP: mídia, metas, WhatsApp e calls
+  crm_nectarcrm.py     CRM direto, para quem não está na plataforma
+  midia_planilha.py    mídia paga em planilha diária
+  conversas_mcp.py     calls e WhatsApp já lidos, gravados para conferência
+transformar/   T — o contrato e as contas
+  canonico.py          modelo canônico, períodos e validação
+  metricas.py          vendas, funil, mídia, break-even, safra, atribuição, cobertura
+carregar/      L — os cinco blocos e os dois renderizadores
   blocos.py            monta o checkin.json
-  documento.py         markdown para revisar
-  deck.py              .pptx na ordem do template da V4
-clientes/<cliente>/    cliente.json, extrato do CRM e entradas do período (fora do git)
+  documento.py         markdown para revisar antes da reunião
+  deck.py              .pptx na ordem do template
+clientes/<cliente>/    cliente.json, extrato e entradas do período (fora do git)
 tests/regressao.py     as regras que não podem quebrar
 ```
 
-## Uso
+O contrato entre as camadas é `transformar/canonico.py`. Enquanto o adaptador devolver o canônico,
+trocar de CRM ou de origem dos dados não encosta no check-in.
 
 ```bash
-./gerar.sh exemplo mensal 2026-08-15
-./gerar.sh exemplo quinzenal 2026-09-21
+./gerar.sh exemplo mensal 2026-08-15       # mês fechado
+./gerar.sh exemplo quinzenal 2026-09-21    # quinzena corrente, sai marcada como parcial
+python3 tests/regressao.py
+python3 workflow/render_spec.py            # regenera documentação e diagrama a partir do JSON
+```
+
+Saída em `saida/<cliente>/`: `checkin.json` (os números, para conferir), `checkin.md` (documento de
+revisão) e `checkin.pptx` (deck).
+
+---
+
+## As definições, e por que cada uma
+
+| Definição | Por quê |
+| --- | --- |
+| Faturamento lê **data de fechamento** | é o que o cliente reconhece como resultado do mês |
+| Safra lê **data de criação** | é a leitura que isola o efeito da mídia daquele mês |
+| Recorrente é o **funil de recorrência** | o campo de "venda base" do CRM costuma vir vazio ou errado |
+| Novo e recorrente **separados e somados** | a planilha do cliente lança só a venda nova, e a recompra some do total |
+| Atribuição **declarada no `cliente.json`** | número sem regra escrita não se defende numa reunião |
+| Fonte incompleta vira **"não medido"** | evita ROAS inflado por base parada |
+| Período parcial é **marcado**, meta é **proporcional** | quinzena não se compara com meta mensal |
+| Um canal tem **um dono** (`fonte_por_canal`) | o mesmo canal em duas fontes dobra o investimento |
+
+## Configurar um cliente
+
+Copie `clientes/exemplo/cliente.json` e ajuste: fee, verba, margem, funis de venda e de recorrência,
+a regra de atribuição, os OKRs do ciclo e os riscos conhecidos. Para ligar a plataforma de dados,
+preencha o bloco `flow` com o `project_document_id` — o topo de `extrair/flow_mcp.py` explica como
+achar o projeto e onde ficam as credenciais, que nunca entram no repositório.
+
+A pasta de cada cliente fica fora do git por padrão. Quem opera um cliente real mantém também a sua
+própria regressão em `tests/regressao_cliente.py`, com um mês já fechado e os números conferidos à
+mão — é o que garante que uma mudança na skill não mova silenciosamente o resultado de ninguém.
+
+## Testes
+
+```bash
 python3 tests/regressao.py
 ```
 
-Saída em `saida/<cliente>/`: `checkin.json`, `checkin.md` e `checkin.pptx`.
-
-## As regras
-
-| Regra | Por quê |
-| --- | --- |
-| Faturamento lê data de fechamento | é o que o cliente reconhece como resultado do mês |
-| Safra lê data de criação | é a leitura que isola o efeito da mídia do mês |
-| Novo e recorrente separados e somados | a planilha do cliente costuma lançar só o novo |
-| Atribuição declarada no `cliente.json` | número sem regra escrita não se defende |
-| Fonte incompleta vira "não medido" | evita ROAS inflado por base parada |
-| Período parcial é marcado, meta é proporcional | quinzena não se compara com meta mensal |
-
-## Configurar um cliente novo
-
-Copie `clientes/exemplo/cliente.json` e ajuste: fee, verba, margem, funis de venda e de
-recorrência, a regra de atribuição, os OKRs do ciclo e os riscos conhecidos. Para ligar o Flow,
-preencha o bloco `flow` com o `project_document_id` — o topo de `extrair/flow_mcp.py` explica como
-achar o projeto e onde ficam as credenciais.
+Trava leitura de data, atribuição, novo contra recorrente, corte de quinzena, mídia incompleta,
+comparadores de OKR, pendências de call e WhatsApp e os dois renderizadores.
 
 ## Licença
 

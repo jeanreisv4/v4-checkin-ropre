@@ -1,10 +1,15 @@
+<!-- Gerado por workflow/render_spec.py a partir de workflow/checkin-ropre.workflow.json.
+     Edite o JSON, não este arquivo. -->
+
 # Check-in ROPRE — especificação do workflow para o V4S
 
-Especificação para o harness do V4S construir o workflow. Tudo roda **dentro do V4S**: os dados já
-chegam pelo Nekt e as etapas executam lá. Nenhum passo depende de script externo.
+Especificação da versão que roda **dentro do V4S**: os dados chegam pelo Nekt e as etapas
+executam lá. Nenhum passo depende de script externo. O arquivo de import é
+[`workflow/checkin-ropre.workflow.json`](../workflow/checkin-ropre.workflow.json).
 
-O ETL em Python desta skill deixa de ser motor e passa a ser **implementação de referência**: serve
-para conferir se o workflow chegou aos mesmos números num período já fechado.
+O ETL em Python deste repositório deixa de ser motor e passa a ser **implementação de
+referência**: serve para conferir se o workflow chegou aos mesmos números num período já
+fechado.
 
 **Cabeçalho**
 
@@ -13,27 +18,83 @@ para conferir se o workflow chegou aos mesmos números num período já fechado.
 | Nome | Check-in ROPRE — quinzenal e mensal |
 | Produto | Assessoria Byline · Executar *(confirmar)* |
 | Promessa | Um check-in ROPRE pronto para a reunião — deck e documento — com cada número rastreável à sua fonte e o que não foi medido escrito na cara. |
-| Escopo | Pessoal no primeiro ciclo; solicitar canonização depois de rodar em dois clientes |
+| Escopo | pessoal no primeiro ciclo; solicitar canonização depois de rodar em dois clientes |
+| Cadências | quinzenal, mensal, quarter |
 | Etapas | 15 |
-| Conexões | 19 |
+| Conexões | 23 |
+
+## O desenho
+
+```mermaid
+flowchart TD
+    E01["<b>01</b> Abrir o período e as<br/>premissas"]
+    E02["<b>02</b> Conferir a cobertura<br/>das fontes 🔧"]
+    E03["<b>03</b> Puxar a base do<br/>período 🔧"]
+    E04["<b>04</b> Calcular os<br/>indicadores do período"]
+    E05["<b>05</b> Resumo de call →<br/>briefing"]
+    E06["<b>06</b> Varredura do grupo de<br/>WhatsApp 🔧"]
+    E07["<b>07</b> Entregas e horas 🔧"]
+    E08["<b>08</b> Sinais do cockpit 🔧"]
+    E09["<b>09</b> R · Resultados"]
+    E10["<b>10</b> O · Objetivos 🔧"]
+    E11["<b>11</b> P · Premissas e Riscos"]
+    E12["<b>12</b> E · Entregas"]
+    E13["<b>13</b> E · Próximos Passos"]
+    E14["<b>14</b> Conferência dos<br/>números"]
+    E15["<b>15</b> Gerar deck e documento 🔧"]
+
+    E01 --> E02
+    E01 --> E05
+    E01 --> E06
+    E01 --> E07
+    E01 --> E08
+    E02 --> E03
+    E03 --> E04
+    E04 --> E09
+    E04 --> E10
+    E04 --> E11
+    E05 --> E10
+    E05 --> E11
+    E05 --> E12
+    E05 --> E13
+    E06 --> E12
+    E07 --> E12
+    E08 --> E11
+    E09 --> E14
+    E10 --> E14
+    E11 --> E14
+    E12 --> E14
+    E13 --> E14
+    E14 --> E15
+
+    class E01,E05 briefing;
+    class E02,E03,E07 dados;
+    class E06,E08 pesquisa;
+    class E04,E09,E10,E11,E12,E13 analise;
+    class E14 revisao;
+    class E15 entrega;
+
+    classDef briefing fill:#1f2937,stroke:#60a5fa,color:#e5e7eb;
+    classDef dados fill:#1f2937,stroke:#34d399,color:#e5e7eb;
+    classDef pesquisa fill:#1f2937,stroke:#fbbf24,color:#e5e7eb;
+    classDef analise fill:#1f2937,stroke:#f87171,color:#e5e7eb;
+    classDef revisao fill:#1f2937,stroke:#a78bfa,color:#e5e7eb;
+    classDef entrega fill:#1f2937,stroke:#e5e7eb,color:#e5e7eb;
+```
+
+🔧 = etapa que chama ferramenta (MCP) durante a execução.
 
 ---
 
-## As quatro leis do workflow
+## As leis do workflow
 
-Estas entram no briefing de **toda** etapa que toca número. Com o cálculo acontecendo em etapa de
+Entram no briefing de **toda** etapa que toca número. Com o cálculo acontecendo em etapa de
 modelo, a regra precisa viajar junto com a tarefa — o agente não pode depender de lembrar.
 
-1. **Cobertura antes de conta.** Nenhum indicador que dependa de uma fonte é calculado antes de a
-   etapa 02 dizer que aquela fonte cobre o período inteiro. Fonte incompleta → o indicador sai
-   **"não medido"**, com o motivo e o último dia com dado.
-2. **Definição é fixa, não é escolha.** Faturamento lê **data de fechamento**. Safra lê **data de
-   criação**. Recorrente é o **funil de recorrência**, não o campo de venda base. Atribuição é a
-   **regra declarada no projeto**, e ela aparece escrita no deck.
-3. **Lacuna é resposta.** Nunca preencher buraco com média, proporção, estimativa ou "mês anterior".
-   Não medir e dar zero são coisas diferentes, e as duas são diferentes de "estável".
-4. **Número novo não nasce na escrita.** Todo valor citado nos blocos tem de existir na saída da
-   etapa de cálculo. Quem escreve o bloco não recalcula nada.
+1. **Cobertura antes de conta.** Nenhum indicador que dependa de uma fonte é calculado antes de a etapa 02 dizer que aquela fonte cobre o período inteiro. Fonte incompleta → o indicador sai **"não medido"**, com o motivo e o último dia com dado.
+2. **Definição é fixa, não é escolha.** Faturamento lê **data de fechamento**. Safra lê **data de criação**. Recorrente é o **funil de recorrência**, não o campo de venda base. Atribuição é a **regra declarada no projeto**, e ela aparece escrita no deck.
+3. **Lacuna é resposta.** Nunca preencher buraco com média, proporção, estimativa ou "mês anterior". Não medir e dar zero são coisas diferentes, e as duas são diferentes de "estável".
+4. **Número novo não nasce na escrita.** Todo valor citado nos blocos tem de existir na saída da etapa de cálculo. Quem escreve o bloco não recalcula nada.
 
 ---
 
@@ -279,37 +340,26 @@ modelo, a regra precisa viajar junto com a tarefa — o agente não pode depende
 
 ---
 
-## Conexões (19)
+## Conexões
 
 ```
-01 ─→ 02 ─→ 03 ─→ 04 ─┬─→ 09 ──┐
- │                     ├─→ 10 ──┤
- ├─→ 05 ─┬─→ 10 ───────┼────────┤
- │       ├─→ 11 ───────┤        │
- │       ├─→ 12 ───────┤        │
- │       └─→ 13 ───────┤        │
- ├─→ 06 ─────→ 12 ─────┤        ├─→ 14 ─→ 15
- ├─→ 07 ─────→ 12 ─────┤        │
- └─→ 08 ─────→ 11 ─────┘        │
-         02, 03, 04 ────────────┘  (insumo da conferência)
+  01→02  01→05  01→06  01→07  01→08  02→03  03→04  04→09  04→10  04→11  05→10  05→11  05→12  05→13  06→12  07→12  08→11  09→14  10→14  11→14  12→14  13→14  14→15
 ```
-
-01→02, 02→03, 03→04, 01→05, 01→06, 01→07, 01→08, 04→09, 04→10, 04→11, 05→10, 05→11, 05→12, 05→13,
-06→12, 07→12, 08→11, 09..13→14, 14→15.
 
 ## Como validar antes de publicar
 
-Rode o workflow num **período já fechado** e compare com a implementação de referência desta skill,
-número a número: vendas, receita, novos, recorrentes, ganhos da safra e taxa de ganho. Se o workflow
-chegar sozinho aos mesmos valores, as definições estão corretamente escritas nos briefings. Se não
-chegar, a diferença aponta exatamente qual definição ficou ambígua.
+Rode o workflow num **período já fechado** e compare com a implementação de referência deste
+repositório, número a número: vendas, receita, novos, recorrentes, ganhos da safra e taxa de
+ganho. Se o workflow chegar sozinho aos mesmos valores, as definições estão corretamente
+escritas nos briefings. Se não chegar, a diferença aponta exatamente qual definição ficou
+ambígua.
 
-## O que ainda preciso saber
+## O que ainda depende do Studio
 
-1. **Em que formato o harness recebe esta especificação** — texto corrido, JSON de workflow, ou um
-   briefing no chat do Studio? É o que falta para eu entregar no formato que ele consome em vez de
-   um documento para alguém transcrever.
-2. **O catálogo completo de etapas.** Reusei `Resumo de call → briefing`; com a lista inteira,
-   provavelmente 06, 07 e 08 também têm equivalente pronto.
-3. **Como a etapa declara a ferramenta que vai chamar** — 02, 03, 06, 07, 08, 10 e 15 dependem disso.
-4. **Confirmar o produto** do workflow (usei Assessoria Byline · Executar).
+1. **O schema de import do V4S.** O JSON deste repositório é neutro e auto-descritivo; o
+   mapeamento para o formato do Studio é mecânico assim que houver um workflow exportado de lá
+   para servir de molde.
+2. **O catálogo completo de etapas.** Só uma etapa foi reusada (`Resumo de call → briefing`);
+   com a lista inteira, provavelmente 06, 07 e 08 também têm equivalente pronto.
+3. **Como a etapa declara a ferramenta que chama** — vale para as sete etapas marcadas com 🔧.
+4. **Confirmar o produto** do workflow.
