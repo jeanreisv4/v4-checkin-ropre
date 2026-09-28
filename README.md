@@ -1,3 +1,7 @@
+> **Este repositório foi arquivado em 28/09/2026.** A skill continua em
+> [github.com/jeanreisv4/growth-enginner/checkin-ropre](https://github.com/jeanreisv4/growth-enginner/tree/main/checkin-ropre),
+> junto com as outras skills de growth engineering. As próximas versões saem só lá.
+
 # Check-in ROPRE
 
 **O check-in de cliente como workflow de agentes: do dado bruto ao deck da reunião, com a regra de
